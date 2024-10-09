@@ -14,15 +14,18 @@ public class Conexao {
     public static Connection getConexao() {
     
         try {
+
             if(conn == null) {
 
                 conn = DriverManager.getConnection(url, user, password);
                 return conn;
+                
             }
 
             else
                 return conn;
         }
+
         catch(SQLException e) {
             System.out.println(e);
             return null;

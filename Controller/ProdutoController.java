@@ -7,6 +7,7 @@ public class ProdutoController {
     
     static Scanner entrada = new Scanner(System.in);
 
+
     public static Produto CadastrarProduto() {
         
         System.out.println("------------------------------");
@@ -26,11 +27,56 @@ public class ProdutoController {
 
         System.out.println("------------------------------");
 
+        entrada.close();
+
         return produto;
 
     }
 
-    public void listarProdutos(ArrayList<Produto> produtos) {
+
+    public static Produto alterarProduto () {
+
+        Produto produto = new Produto();
+
+        System.out.println("-----------------ALTERAÇÃO-----------------");
+
+        System.out.println("Digite o novo nome:");
+        String nome = entrada.nextLine();
+        produto.setNome(nome);
+        System.out.println();
+
+        System.out.println("Digite a nova descricao:");
+        String descricao = entrada.nextLine();
+        produto.setDescricao(descricao);
+        System.out.println();
+
+        System.out.println("Digite o novo preco:");
+        double preco = Double.parseDouble(entrada.nextLine());
+        produto.setPreco(preco);
+        System.out.println();
+
+        System.out.println("Digite a quantidade no estoque:");
+        int quantidade_estoque = Integer.parseInt(entrada.nextLine());
+        produto.setQuatidade_estoque(quantidade_estoque);
+        System.out.println();
+
+        System.out.println("-----------------------------------------");
+
+        entrada.close();
+
+        return produto;
+
+    }
+
+
+    public static int produtoId() {
+        System.out.println("Digite o id do produto");
+        int id = Integer.parseInt(entrada.nextLine());
+        return id;
+    }
+
+
+    public static void listarProdutos(ArrayList<Produto> produtos) {
 
         System.out.println("-----------------PRODUTOS-----------------");
 

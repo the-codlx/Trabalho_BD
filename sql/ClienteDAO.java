@@ -13,15 +13,15 @@ public class ClienteDAO {
 
     private static ResultSet rs = null;
     private static PreparedStatement ps = null;
-    private static Scanner entrada = new Scanner(System.in);
+
 
     public void cadastrarCliente(Cliente cliente) {
 
         String sql = "INSERT INTO CLIENTE (NOME, EMAIL, CPF, CEP, RUA, BAIRRO, CIDADE, NUMERO, COMPLEMENTO, TELEFONE, SENHA, NOME_USUARIO) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
-        try  {
+        try {
 
-            ps = Conexao.getConexao().prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
+            PreparedStatement ps = Conexao.getConexao().prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
 
             ps.setString(1, cliente.getNome());
             ps.setString(2, cliente.getEmail());
@@ -51,8 +51,18 @@ public class ClienteDAO {
                     }
                 }
             }
+            
 
-            ps.close();
+            if(ps != null) {
+
+                try {
+                    ps.close();
+                }
+                catch(SQLException e) {
+                    System.out.println(e);
+                }
+
+            }
             
         }
 
@@ -70,10 +80,14 @@ public class ClienteDAO {
 
         Cliente cliente = new Cliente();
 
+        String sql = "SELECT * FROM Cliente WHERE nome_usuario = ? AND senha= ?";
+
         try {
+
             Connection conn = Conexao.getConexao();
-            String sql = "SELECT * FROM Cliente WHERE nome_usuario = ? AND senha= ?";
-            ps = conn.prepareStatement(sql);
+            
+            PreparedStatement ps = conn.prepareStatement(sql);
+
             ps.setString(1, nome_usuario);
             ps.setString(2, senha);
             
@@ -97,8 +111,29 @@ public class ClienteDAO {
                 cliente.setRole(rs.getString("ROLE"));
             }
 
-            ps.close();
-            conn.close();
+
+            if(rs != null) {
+
+                try {
+                    rs.close();
+                }
+                catch(SQLException e) {
+                    System.out.println(e);
+                }
+                
+            }
+
+            if(ps != null) {
+
+                try {
+                    ps.close();
+                }
+                catch(SQLException e) {
+                    System.out.println(e);
+                }
+
+            }
+
         }
 
         catch(SQLException e) {
@@ -109,30 +144,34 @@ public class ClienteDAO {
 
     }
 
+
     public static boolean verificarCredenciais(String Nome_Usuario, String senha) {
 
         boolean autenticado = false;
 
-        try{
+        String sql = "SELECT * FROM Cliente WHERE nome_usuario= ? AND senha= ?";
+
+        try {
 
             Connection conn = Conexao.getConexao();
 
-            String sql = "SELECT * FROM Cliente WHERE nome_usuario= ? AND senha= ?";
-            ps = conn.prepareStatement(sql);
+            PreparedStatement ps = conn.prepareStatement(sql);
+
             ps.setString(1, Nome_Usuario);
             ps.setString(2, senha);
+                
+            ResultSet rs = ps.executeQuery();
 
-            rs = ps.executeQuery();
+                
+            autenticado = (rs.next());
 
-            if (rs.next()) {
-                autenticado = true;
-            }
 
-            ps.close();
             rs.close();
+            ps.close();
+
 
         } catch (Exception e) {
-            System.out.println("Erro ao verificar credencias: " + e);
+            System.out.println("Erro ao verificar credenciais: " + e);
         }
 
         return autenticado;

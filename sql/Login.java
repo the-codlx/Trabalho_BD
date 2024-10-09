@@ -8,7 +8,7 @@ public class Login {
     private static Scanner entrada = new Scanner(System.in);
 
 
-    public static String[] FazerLogin() {
+    /*public static String[] pedeUsuarioESenha() {
 
         System.out.println("-----------------LOGIN-----------------");
         System.out.println("Digite o nome de usuario: ");
@@ -18,7 +18,7 @@ public class Login {
         String senha = entrada.nextLine();
         System.out.println("--------------------------------------");
         return new String[] { nome_usuario, senha };
-    }
+    }*/
 
 
 }

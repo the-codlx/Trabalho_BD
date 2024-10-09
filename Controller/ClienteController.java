@@ -10,12 +10,13 @@ public class ClienteController {
 
     static Scanner entrada = new Scanner(System.in);
 
-    public static Cliente cadastrarCliente () {
+    //solicita os dados do cliente
+    public static Cliente solicitarDadosCliente() {
 
         Cliente cliente = new Cliente();
 
         System.out.println("------------------------------");
-        System.out.println("Digite o nome: "); 
+        System.out.println("Digite o nome: ");
         String nome = entrada.nextLine();
         cliente.setNome(nome);
         System.out.println("Digite o email: ");
@@ -49,7 +50,7 @@ public class ClienteController {
         String nome_usuario = entrada.nextLine();
         cliente.setNome_Usuario(nome_usuario);
         System.out.println("Registre uma senha:");
-        String senha = entrada.nextLine(); 
+        String senha = entrada.nextLine();
         cliente.setSenha(senha);
 
         System.out.println("------------------------------");
@@ -58,7 +59,7 @@ public class ClienteController {
 
     }
 
-    public static void LoginSistema() {
+    public static void GerenciarLogin() {
 
         String[] credenciais = Login.FazerLogin();
 
@@ -66,7 +67,6 @@ public class ClienteController {
 
             System.out.println("Logado com sucesso!");
             System.out.println("ID: ");
-
 
         }
 
@@ -81,15 +81,14 @@ public class ClienteController {
             switch (opcao) {
 
                 case 1:
-                    LoginSistema();
+                    GerenciarLogin();
                     break;
 
                 case 2:
-                    Cliente cliente = ClienteController.cadastrarCliente();
+                    Cliente cliente = ClienteController.solicitarDadosCliente();
                     ClienteDAO dao = new ClienteDAO();
                     dao.cadastrarCliente(cliente);
-                    LoginSistema();
-                    dao.fechaConexao();
+                    GerenciarLogin();
 
                     break;
 
@@ -102,6 +101,5 @@ public class ClienteController {
         }
 
     }
-
 
 }
