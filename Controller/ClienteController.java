@@ -1,16 +1,17 @@
 package Controller;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Scanner;
 
 import model.Cliente;
 import sql.ClienteDAO;
-import sql.Login;
 
 public class ClienteController {
 
     static Scanner entrada = new Scanner(System.in);
 
-    //solicita os dados do cliente
+    // solicita os dados do cliente
     public static Cliente solicitarDadosCliente() {
 
         Cliente cliente = new Cliente();
@@ -59,11 +60,31 @@ public class ClienteController {
 
     }
 
+    public static Map<String, String> pedeUsuarioESenha() {
+
+        System.out.println("-----------------LOGIN-----------------");
+        System.out.println("Digite o nome de usuario: ");
+        String nome_usuario = entrada.nextLine();
+
+        System.out.println();
+
+        System.out.println("Digite a senha: ");
+        String senha = entrada.nextLine();
+
+        System.out.println("--------------------------------------");
+
+        Map<String, String> dadosLogin = new HashMap<>();
+        dadosLogin.put("usuario", nome_usuario);
+        dadosLogin.put("senha", senha);
+
+        return dadosLogin;
+    }
+
     public static void GerenciarLogin() {
 
-        String[] credenciais = Login.FazerLogin();
+        Map<String, String> credenciais = pedeUsuarioESenha();
 
-        if (ClienteDAO.verificarCredenciais(credenciais[0], credenciais[1])) {
+        if (ClienteDAO.verificarCredenciais(credenciais.get("usuario"), credenciais.get("senha"))) {
 
             System.out.println("Logado com sucesso!");
             System.out.println("ID: ");
