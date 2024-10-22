@@ -75,6 +75,12 @@ public class ProdutoController {
         return id;
     }
 
+    public static int Quantidade() {
+        System.out.println("Digite a quantidade");
+        int quantidade = Integer.parseInt(entrada.nextLine());
+        return quantidade;
+    }
+
 
     public static void listarProdutos(ArrayList<Produto> produtos) {
 

@@ -80,47 +80,8 @@ public class ClienteController {
         return dadosLogin;
     }
 
-    public static void GerenciarLogin() {
 
-        Map<String, String> credenciais = pedeUsuarioESenha();
 
-        if (ClienteDAO.verificarCredenciais(credenciais.get("usuario"), credenciais.get("senha"))) {
-
-            System.out.println("Logado com sucesso!");
-            System.out.println("ID: ");
-
-        }
-
-        else {
-
-            String opcoes = "1 - Tentar novamente\n2 - Cadastrar\n3 - Sair";
-
-            System.out.println(opcoes);
-
-            int opcao = Integer.parseInt(entrada.nextLine());
-
-            switch (opcao) {
-
-                case 1:
-                    GerenciarLogin();
-                    break;
-
-                case 2:
-                    Cliente cliente = ClienteController.solicitarDadosCliente();
-                    ClienteDAO dao = new ClienteDAO();
-                    dao.cadastrarCliente(cliente);
-                    GerenciarLogin();
-
-                    break;
-
-                case 3:
-                    System.out.println("Saindo...");
-                    break;
-
-            }
-
-        }
-
-    }
+    
 
 }
