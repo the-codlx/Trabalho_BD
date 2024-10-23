@@ -4,6 +4,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.ArrayList;
+import java.util.Map;
 import java.util.Scanner;
 
 import javax.naming.spi.DirStateFactory.Result;
@@ -11,10 +12,13 @@ import javax.naming.spi.DirStateFactory.Result;
 import Conection.Conexao;
 import Controller.ClienteController;
 import Controller.ProdutoController;
+import model.CarrinhoDeCompras;
 import model.Cliente;
+import model.ItensDoCarrinho;
 import model.Produto;
+import sql.CarrinhoDeComprasDAO;
 import sql.ClienteDAO;
-import sql.Login;
+import sql.ItensDoCarrinhoDAO;
 import sql.ProdutoDAO;
 import utils.Utils;
 
@@ -33,7 +37,7 @@ public class Principal {
             switch (Opcao()) {
 
                 case 1:
-                    realizarLogin();
+                    GerenciarLogin();
                     break;
 
                 case 2:
@@ -67,9 +71,6 @@ public class Principal {
         System.out.println(Opcoes());
     }
 
-    private static void mostraOpcoesAdmin() {
-        System.out.println("1 - Cadastrar Produto\n2 - Listar Produtos\n3 - Sair");
-    }
 
     // metodo para cadastrar cliente
 
@@ -81,72 +82,84 @@ public class Principal {
 
     // metodos para login
 
-    private static void processarCliente(Cliente cliente) {
-        switch (cliente.getRole()) {
-            case "admin":
-                gerenciarProdutos();
-                break;
 
-            case "cliente":
-                System.out.println("Bem vindo, " + cliente.getNome());
-                break;
 
-            default:
-                System.out.println("Erro ao fazer login.");
-                break;
-        }
-    }
+    public static void GerenciarLogin() {
 
-    private static void realizarLogin() {
+        Map<String, String> credenciais = ClienteController.pedeUsuarioESenha();
 
-        if (ClienteDAO.verificarCredenciais(usuarioESenha[0], usuarioESenha[1])) {
+        int id_cliente = ClienteDAO.verificarCredenciaisERetornaID(credenciais.get("usuario"), credenciais.get("senha"));
 
-            Cliente cliente = ClienteDAO.buscarCliente(usuarioESenha[0], usuarioESenha[1]);
-            processarCliente(cliente);
+        if (id_cliente != -1) {
+
+            MenuCliente(id_cliente);
 
         }
 
         else {
 
-            System.out.println("Login falhou.");
+            String opcoes = "1 - Tentar novamente\n2 - Cadastrar\n3 - Sair";
+
+            System.out.println(opcoes);
+
+            int opcao = Integer.parseInt(entrada.nextLine());
+
+            switch (opcao) {
+
+                case 1:
+                    GerenciarLogin();
+                    break;
+
+                case 2:
+                    Cliente cliente = ClienteController.solicitarDadosCliente();
+                    ClienteDAO dao = new ClienteDAO();
+                    dao.cadastrarCliente(cliente);
+                    GerenciarLogin();
+
+                    break;
+
+                case 3:
+                    MenuCliente(id_cliente);
+                    break;
+
+            }
 
         }
-
     }
 
-    // metodo para gerenciar produtos
+    // metodo para Menu de Clientes
 
-    private static void gerenciarProdutos() {
+    private static void MenuCliente(int id_cliente) {
 
-        ProdutoDAO dao = new ProdutoDAO();
+        ProdutoDAO prod_dao = new ProdutoDAO();
+        CarrinhoDeComprasDAO car_dao = new CarrinhoDeComprasDAO();
+        ItensDoCarrinhoDAO itens_car_dao = new ItensDoCarrinhoDAO();
+        int id_carrinho_de_compras = car_dao.criarCarrinhoDeCompras(id_cliente);
 
         while (true) {
 
             System.out.println("Escolha uma opção:");
-            System.out.println("1. Cadastrar Produto");
-            System.out.println("2. Visualizar Produtos");
-            System.out.println("3. Alterar Produto");
-            System.out.println("4. Excluir Produto");
+            System.out.println("1. Produtos");
+            System.out.println("2. Comprar Produto");
+            System.out.println("3. Visualizar Carrinho");
+            System.out.println("4. Excluir Produtos do Carrinho");
+            System.out.println("5. Excluir Carrinho de Compras");
             System.out.println("0. Sair");
 
             int opcao = Opcao(); // Método para capturar a opção do usuário
 
             switch (opcao) {
                 case 1:
-                    dao = new ProdutoDAO(ProdutoController.CadastrarProduto());
-                    dao.cadastrarProduto();
+                    Produtos(prod_dao);
                     break;
 
                 case 2:
-                    visualizarProdutos(dao);
+                    comprarProduto(id_carrinho_de_compras);                
                     break;
 
                 case 3:
-                    int id = Utils.produtoId(entrada);
-                    // primeiro parâmetro busca produto pelo id e retorna o objeto, segundo
-                    // parametro pede ao usuario os dados dos atributos do novo produto
-                    dao.alterarProduto(id, ProdutoController.alterarProduto());
-
+                    ProdutoController.listarProdutosNoCarrinho(itens_car_dao.produtosItensDoCarrinho(id_carrinho_de_compras));
+                    break;
                 case 4:
 
                 case 0:
@@ -162,14 +175,41 @@ public class Principal {
 
     // metodo para vizualizar produtos
 
-    private static void visualizarProdutos(ProdutoDAO dao) {
-
-        ArrayList<Produto> produtos = dao.listarProdutos();
-
-        ProdutoController controller = new ProdutoController();
-
-        controller.listarProdutos(produtos);
-
+    private static void Produtos(ProdutoDAO dao) {
+        ProdutoController.listarProdutos(dao.listarProdutos());
     }
 
+
+    //metodos para compra
+    public static void comprarProduto(int id_carrinho_de_compras) 
+    {   
+
+        ProdutoDAO dao = new ProdutoDAO();
+
+        int id_produto = ProdutoController.produtoId();
+
+        //verifica se o produto está cadastrado
+        if(dao.existeProduto(id_produto)) {
+            
+            int quantidade = ProdutoController.Quantidade();
+        
+            // cria o carrinho
+            ItensDoCarrinho ItensDoCarrinho = new ItensDoCarrinho(id_carrinho_de_compras, id_produto, quantidade);
+
+            ItensDoCarrinhoDAO itens_dao = new ItensDoCarrinhoDAO();
+
+            itens_dao.adicionarProdutos(ItensDoCarrinho);
+
+            
+
+        }
+
+        else {
+            
+            System.out.println("Produto não cadastrado!");
+            System.out.println();
+
+            }                 
+
+        }
 }

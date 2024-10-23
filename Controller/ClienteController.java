@@ -1,16 +1,17 @@
 package Controller;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Scanner;
 
 import model.Cliente;
 import sql.ClienteDAO;
-import sql.Login;
 
 public class ClienteController {
 
     static Scanner entrada = new Scanner(System.in);
 
-    //solicita os dados do cliente
+    // solicita os dados do cliente
     public static Cliente solicitarDadosCliente() {
 
         Cliente cliente = new Cliente();
@@ -59,47 +60,28 @@ public class ClienteController {
 
     }
 
-    public static void GerenciarLogin() {
+    public static Map<String, String> pedeUsuarioESenha() {
 
-        String[] credenciais = Login.FazerLogin();
+        System.out.println("-----------------LOGIN-----------------");
+        System.out.println("Digite o nome de usuario: ");
+        String nome_usuario = entrada.nextLine();
 
-        if (ClienteDAO.verificarCredenciais(credenciais[0], credenciais[1])) {
+        System.out.println();
 
-            System.out.println("Logado com sucesso!");
-            System.out.println("ID: ");
+        System.out.println("Digite a senha: ");
+        String senha = entrada.nextLine();
 
-        }
+        System.out.println("--------------------------------------");
 
-        else {
+        Map<String, String> dadosLogin = new HashMap<>();
+        dadosLogin.put("usuario", nome_usuario);
+        dadosLogin.put("senha", senha);
 
-            String opcoes = "1 - Tentar novamente\n2 - Cadastrar\n3 - Sair";
-
-            System.out.println(opcoes);
-
-            int opcao = Integer.parseInt(entrada.nextLine());
-
-            switch (opcao) {
-
-                case 1:
-                    GerenciarLogin();
-                    break;
-
-                case 2:
-                    Cliente cliente = ClienteController.solicitarDadosCliente();
-                    ClienteDAO dao = new ClienteDAO();
-                    dao.cadastrarCliente(cliente);
-                    GerenciarLogin();
-
-                    break;
-
-                case 3:
-                    System.out.println("Saindo...");
-                    break;
-
-            }
-
-        }
-
+        return dadosLogin;
     }
+
+
+
+    
 
 }

@@ -1,5 +1,6 @@
 package sql;
 
+import java.net.IDN;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -76,11 +77,11 @@ public class ClienteDAO {
 
     }
 
-    public static Cliente buscarCliente(String nome_usuario, String senha) {
+    public static Cliente buscarClientePeloId(int id) {
 
         Cliente cliente = new Cliente();
 
-        String sql = "SELECT * FROM Cliente WHERE nome_usuario = ? AND senha= ?";
+        String sql = "SELECT * FROM Cliente WHERE id_cliente = ?";
 
         try {
 
@@ -88,14 +89,13 @@ public class ClienteDAO {
             
             PreparedStatement ps = conn.prepareStatement(sql);
 
-            ps.setString(1, nome_usuario);
-            ps.setString(2, senha);
+            ps.setInt(1, id);
             
             ps.executeQuery();
             ResultSet rs = ps.getResultSet();
 
             if(rs.next()) {
-                cliente.setId_cliente(rs.getInt("id_cliente"));
+                cliente.setId_cliente(id);
                 cliente.setNome(rs.getString("nome"));
                 cliente.setEmail(rs.getString("email"));
                 cliente.setCpf(rs.getString("cpf"));
@@ -145,9 +145,9 @@ public class ClienteDAO {
     }
 
 
-    public static boolean verificarCredenciais(String Nome_Usuario, String senha) {
+    public static int verificarCredenciaisERetornaID(String Nome_Usuario, String senha) {
 
-        boolean autenticado = false;
+        int id = 0;
 
         String sql = "SELECT * FROM Cliente WHERE nome_usuario= ? AND senha= ?";
 
@@ -162,9 +162,14 @@ public class ClienteDAO {
                 
             ResultSet rs = ps.executeQuery();
 
-                
-            autenticado = (rs.next());
-
+            if(rs.next()) 
+            {
+                id = rs.getInt("id_cliente");
+            }
+            else
+            {
+                id = -1;
+            }
 
             rs.close();
             ps.close();
@@ -174,7 +179,7 @@ public class ClienteDAO {
             System.out.println("Erro ao verificar credenciais: " + e);
         }
 
-        return autenticado;
+        return id;
 
     }
 
