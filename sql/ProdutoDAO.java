@@ -115,7 +115,8 @@ public class ProdutoDAO {
 
                 int quantidade_estoque = rs.getInt("QUANTIDADE_ESTOQUE");
 
-                if(quantidade_estoque > 0) {
+                if(quantidade_estoque > 0) 
+                {
                     Produto produto = new Produto();
                     produto.setId_produto(rs.getInt("ID_PRODUTO"));
                     produto.setNome(rs.getString("NOME"));
@@ -178,6 +179,42 @@ public class ProdutoDAO {
         }
 
         return produto;
+
+    }
+    
+    
+    //verificar se o produto está no banco de dados
+
+    public boolean existeProduto(int id) {
+
+        String sql = "SELECT * FROM produto WHERE id_produto = ?";
+
+        boolean possui = false;
+
+        try {
+
+            ps =  Conexao.getConexao().prepareStatement(sql);
+
+            ps.setInt(1, id);
+                
+            rs = ps.executeQuery();
+
+            if(rs.next()) {
+                
+                possui = true;
+            }
+
+            ps.close();
+            rs.close();
+
+        }
+        catch(SQLException e) {
+
+            System.out.println(e);
+
+        }
+
+        return possui;
 
     } 
 

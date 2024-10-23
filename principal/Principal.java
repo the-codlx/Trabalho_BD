@@ -133,7 +133,7 @@ public class Principal {
 
         ProdutoDAO prod_dao = new ProdutoDAO();
         CarrinhoDeComprasDAO car_dao = new CarrinhoDeComprasDAO();
-        // carrinho = new CarrinhoDeCompras(id_cliente, id_cliente)
+        ItensDoCarrinhoDAO itens_car_dao = new ItensDoCarrinhoDAO();
         int id_carrinho_de_compras = car_dao.criarCarrinhoDeCompras(id_cliente);
 
         while (true) {
@@ -158,8 +158,8 @@ public class Principal {
                     break;
 
                 case 3:
-                    
-
+                    ProdutoController.listarProdutosNoCarrinho(itens_car_dao.produtosItensDoCarrinho(id_carrinho_de_compras));
+                    break;
                 case 4:
 
                 case 0:
@@ -182,18 +182,34 @@ public class Principal {
 
     //metodos para compra
     public static void comprarProduto(int id_carrinho_de_compras) 
-    {
+    {   
+
+        ProdutoDAO dao = new ProdutoDAO();
+
         int id_produto = ProdutoController.produtoId();
-        int quantidade = ProdutoController.Quantidade();
+
+        //verifica se o produto está cadastrado
+        if(dao.existeProduto(id_produto)) {
+            
+            int quantidade = ProdutoController.Quantidade();
         
-        ItensDoCarrinho ItensDoCarrinho = new ItensDoCarrinho(id_carrinho_de_compras, id_produto, quantidade);
+            // cria o carrinho
+            ItensDoCarrinho ItensDoCarrinho = new ItensDoCarrinho(id_carrinho_de_compras, id_produto, quantidade);
 
-        ItensDoCarrinhoDAO itens_dao = new ItensDoCarrinhoDAO();
+            ItensDoCarrinhoDAO itens_dao = new ItensDoCarrinhoDAO();
 
-        itens_dao.adicionarProdutos(ItensDoCarrinho);
+            itens_dao.adicionarProdutos(ItensDoCarrinho);
 
-    }
+            
 
+        }
 
+        else {
+            
+            System.out.println("Produto não cadastrado!");
+            System.out.println();
 
+            }                 
+
+        }
 }
