@@ -116,21 +116,64 @@ public class ProdutoController {
 
     public static void listarProdutosNoCarrinho(HashMap<Produto, Integer> produtos) {
 
-        System.out.println("-----------------PRODUTOS NO CARRINHO-----------------");
+        if(produtos.size() > 1) 
+        {
 
-        for (Map.Entry<Produto, Integer> entrada : produtos.entrySet()) {
-            
-            Produto produto = entrada.getKey();
+            System.out.println("-----------------PRODUTOS NO CARRINHO-----------------");
 
-            System.out.println("ID: " + produto.getId_produto());
-            System.out.println("Nome: " + produto.getNome());
-            System.out.println("Descrição: " + produto.getDescricao());
-            System.out.println("Preço: " + produto.getPreco());
-            System.out.println("Quantidade: " + entrada.getValue());
+            for (Map.Entry<Produto, Integer> entrada : produtos.entrySet()) {
+                
+                Produto produto = entrada.getKey();
 
+                System.out.println("ID: " + produto.getId_produto());
+                System.out.println("Nome: " + produto.getNome());
+                System.out.println("Descrição: " + produto.getDescricao());
+                System.out.println("Preço: " + produto.getPreco());
+                System.out.println("Quantidade: " + entrada.getValue());
+
+                System.out.println("-----------------------------------------");
+            }
+        }
+        else 
+        {
+            System.out.println("-----------------------------------------");
+            System.out.println();
+            System.out.println("DESCULPA, NÃO HÁ PRODUTOS NO CARRINHO.");
+            System.out.println();
             System.out.println("-----------------------------------------");
         }
 
     }
 
-}
+
+    public static void conferirProdutosoCarrinho(HashMap<Produto, Integer> produtos) {
+
+        if(produtos.size() > 1) 
+        {
+
+            System.out.println("-----------------PRODUTOS NO CARRINHO-----------------");
+
+            for (Map.Entry<Produto, Integer> entrada : produtos.entrySet()) {
+                
+                Produto produto = entrada.getKey();
+
+                System.out.println("ID: " + produto.getId_produto());
+                System.out.println("Nome: " + produto.getNome());
+                System.out.println("Descrição: " + produto.getDescricao());
+                System.out.println("Preço: " + produto.getPreco());
+                System.out.println("Quantidade: " + entrada.getValue());
+
+                System.out.println("-----------------------------------------");
+            }
+        }
+        else 
+        {
+            System.out.println("-----------------------------------------");
+            System.out.println();
+            System.out.println("DESCULPA, NÃO HÁ PRODUTOS NO CARRINHO.");
+            System.out.println();
+            System.out.println("-----------------------------------------");
+        }
+
+
+}}

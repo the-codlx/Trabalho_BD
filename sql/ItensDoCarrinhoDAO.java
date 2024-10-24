@@ -90,72 +90,83 @@ public class ItensDoCarrinhoDAO {
 
     public HashMap<Produto, Integer> produtosItensDoCarrinho(int id_carrinho) {
 
-        HashMap<Produto, Integer> produtos = new HashMap();
-
-        String itensDoCarrinho = "SELECT id_produto, COUNT(*) AS quantidade\n" + //
-                        "FROM ITENS_DO_CARRINHO\n" + //
-                        "WHERE id_carrinho = ?\n" + //
-                        "GROUP BY id_produto;";
-        String produtosSQL = "sELECT * FROM PRODUTO WHERE ID_PRODUTO = ?";
-
-        try 
-        {
-            PreparedStatement stmtItensDoCarrinho = Conexao.getConexao().prepareStatement(itensDoCarrinho);
-
+        HashMap<Produto, Integer> produtos = new HashMap<>();
+    
+        String itensDoCarrinho = "SELECT id_produto, COUNT(*) AS quantidade\n" +
+                "FROM ITENS_DO_CARRINHO\n" +
+                "WHERE id_carrinho = ?\n" +
+                "GROUP BY id_produto;";
+        String produtosSQL = "SELECT * FROM PRODUTO WHERE ID_PRODUTO = ?";
+    
+        try (
+            // Preparar o statement para itens do carrinho
+            PreparedStatement stmtItensDoCarrinho = Conexao.getConexao().prepareStatement(itensDoCarrinho)
+        ) {
             stmtItensDoCarrinho.setInt(1, id_carrinho);
-
-            ResultSet rsItensDoCarrinho = stmtItensDoCarrinho.executeQuery();
-
-            while(rsItensDoCarrinho.next()) 
-            {
-
-                try
-                {
+    
+            try (
+                // Executar e obter o resultSet dos itens do carrinho
+                ResultSet rsItensDoCarrinho = stmtItensDoCarrinho.executeQuery()
+            ) {
+                while (rsItensDoCarrinho.next()) {
                     int id_produto = rsItensDoCarrinho.getInt("id_produto");
                     int quantidade = rsItensDoCarrinho.getInt("quantidade");
-
-                PreparedStatement stmtProdutosSQL = Conexao.getConexao().prepareStatement(produtosSQL);
-
-                stmtProdutosSQL.setInt(1, id_produto);
-
-                ResultSet rsProdutosSQL = stmtProdutosSQL.executeQuery();
-
-                if(rsProdutosSQL.next()) {
-
-                    Produto produto = new Produto();
-
-                    produto.setNome(rsProdutosSQL.getString("nome"));
-                    produto.setDescricao(rsProdutosSQL.getString("descricao"));
-                    produto.setPreco(rsProdutosSQL.getDouble("preco"));
-                    produto.setId_produto(id_produto);
-
-                    produtos.put(produto, quantidade);
-
+    
+                    try (
+                        // Preparar o statement para produtos
+                        PreparedStatement stmtProdutosSQL = Conexao.getConexao().prepareStatement(produtosSQL)
+                    ) {
+                        stmtProdutosSQL.setInt(1, id_produto);
+    
+                        try (
+                            // Executar e obter o resultSet dos produtos
+                            ResultSet rsProdutosSQL = stmtProdutosSQL.executeQuery()
+                        ) {
+                            if (rsProdutosSQL.next()) {
+                                Produto produto = new Produto();
+                                produto.setNome(rsProdutosSQL.getString("nome"));
+                                produto.setDescricao(rsProdutosSQL.getString("descricao"));
+                                produto.setPreco(rsProdutosSQL.getDouble("preco"));
+                                produto.setId_produto(id_produto);
+    
+                                produtos.put(produto, quantidade);
+                            }
+                        }
                     }
-
                 }
-                catch(SQLException e) 
-                {
-
-                    System.out.println(e);
-                
-                }
-
             }
-
-            stmtItensDoCarrinho.close();
-            rsItensDoCarrinho.close();
-
+        } catch (SQLException e) {
+            System.out.println(e);
         }
+    
+        return produtos;
+    }
 
-        catch(Exception e) 
+
+    public void removeItensDoCarrinho (int id_carrinho, int id_produto) {
+
+        String sql = "UPDATE ITENS_DO_CARRINHO SET QUANTIDADE = ? WHERE ID_PRODUTO = ?";
+
+    }
+
+
+    public double retornaValorTotal (int id_carrinho) 
         {
 
-            System.out.println(e);
-        
-        }
+            double valor_total = 0;
 
-        return produtos;
+            HashMap<Produto, Integer> map = produtosItensDoCarrinho(id_carrinho);
+
+            for (HashMap.Entry<Produto, Integer> entrada : map.entrySet()) {
+                
+                Produto produto = entrada.getKey();
+                int quantidade = entrada.getValue();
+                
+                valor_total += produto.getPreco() * quantidade;
+                
+            }
+
+            return valor_total;
 
     }
 

@@ -104,6 +104,7 @@ public class CarrinhoDeComprasDAO {
             carrinho.setId_carrinho(generatedKeys.getInt(1));
 
             ps.close();
+            generatedKeys.close();
         
         }
         catch(Exception e) {
@@ -116,5 +117,31 @@ public class CarrinhoDeComprasDAO {
 
     }
  
+
+    public void inativaCarrinho(int id_carrinho) 
+    {
+
+        String sql = "UPDATE CARRINHO_DE_COMPRAS SET STATUS = 'FINALIZADO' WHERE ID_CARRINHO = ?";
+
+        try
+        {
+
+            PreparedStatement ps = Conexao.getConexao().prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
+
+            ps.setInt(1, id_carrinho);
+
+            ps.executeUpdate();
+
+            ps.close();
+
+        }
+
+        catch(SQLException e) {
+
+            System.out.println(e);
+
+        }
+
+    }
 
 }

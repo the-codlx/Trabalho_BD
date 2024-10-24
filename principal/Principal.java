@@ -4,6 +4,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Scanner;
 
@@ -15,10 +16,12 @@ import Controller.ProdutoController;
 import model.CarrinhoDeCompras;
 import model.Cliente;
 import model.ItensDoCarrinho;
+import model.Pedido;
 import model.Produto;
 import sql.CarrinhoDeComprasDAO;
 import sql.ClienteDAO;
 import sql.ItensDoCarrinhoDAO;
+import sql.PedidoDAO;
 import sql.ProdutoDAO;
 import utils.Utils;
 
@@ -143,7 +146,7 @@ public class Principal {
             System.out.println("2. Comprar Produto");
             System.out.println("3. Visualizar Carrinho");
             System.out.println("4. Excluir Produtos do Carrinho");
-            System.out.println("5. Excluir Carrinho de Compras");
+            System.out.println("5. Finalizar Pagamento");
             System.out.println("0. Sair");
 
             int opcao = Opcao(); // Método para capturar a opção do usuário
@@ -161,7 +164,12 @@ public class Principal {
                     ProdutoController.listarProdutosNoCarrinho(itens_car_dao.produtosItensDoCarrinho(id_carrinho_de_compras));
                     break;
                 case 4:
+                    
 
+                case 5:
+                    Pedido pedido = new Pedido(id_cliente, id_carrinho_de_compras, itens_car_dao.retornaValorTotal(id_carrinho_de_compras));
+                    finalizarPagamento(pedido, itens_car_dao);
+                    break;
                 case 0:
                     return; // Sai do loop e volta ao menu anterior
 
@@ -212,4 +220,55 @@ public class Principal {
             }                 
 
         }
+
+        public static void finalizarPagamento(Pedido pedido, ItensDoCarrinhoDAO dao) {
+
+            HashMap produtosDoCarrinho = dao.produtosItensDoCarrinho(pedido.getId_carrinho());
+
+            System.out.println("-----------------------------------------------------");
+            System.out.println();
+            System.out.println("Deseja realmente finalizar pagamento?");
+            System.out.println("1. Sim");
+            System.out.println("2. Não");
+            System.out.println();
+            ProdutoController.listarProdutosNoCarrinho(produtosDoCarrinho);
+            System.out.println();
+
+            int opcao = Opcao();
+
+            switch(opcao) {
+
+                case 1:
+                    try{
+
+                        PedidoDAO PedidoDAO = new PedidoDAO();
+                        PedidoDAO.criaPedido(pedido);
+
+                    }
+                    catch(Exception e) 
+                    {
+
+                        System.out.println(e);
+                    
+                    }
+                    finally{
+
+                        System.out.println("------------------------------------");
+                        System.out.println();
+                        System.out.println("PARABÉNS PELA COMPRA! PEDIDO FINALIZADO.");
+                        System.out.println("RETORNANDO AO MENU.");
+                        System.out.println("------------------------------------");
+                        System.out.println();
+
+                    }
+
+                    break;
+                case 2:
+                    break;
+
+                default: break;
+            }
+
+        }
+
 }

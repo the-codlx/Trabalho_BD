@@ -6,27 +6,22 @@ public class Pedido {
     
     private int id_pedido;
     private int id_cliente;
-    private int id_pagamento;
-    private Timestamp data_pedido;
+    private int id_carrinho;
     private double valor_total;
-    private Status status;
+    private String status;
 
-    public enum Status {
-        PENDENTE,
-        PAGO,
-        ENVIADO
 
-    }
 
-    public Pedido(int id_cliente, int id_pagamento, double valor_total) {
+    public Pedido(int id_cliente, int id_carrinho_de_compras, double valor_total) {
 
         this.id_cliente = id_cliente;
-        this.id_pagamento = id_pagamento;
+        this.id_carrinho = id_carrinho_de_compras;
         this.valor_total = valor_total;
-        this.data_pedido = new Timestamp(System.currentTimeMillis());
-        this.status = status.PENDENTE;
+        this.status = "pendente";
 
     }
+
+
 
     public int getId_pedido() {
         return id_pedido;
@@ -34,6 +29,14 @@ public class Pedido {
 
     public void setId_pedido(int id_pedido) {
         this.id_pedido = id_pedido;
+    }
+
+    public int getId_carrinho() {
+        return id_carrinho;
+    }
+
+    public void setId_carrinho(int id_carrinho) {
+        this.id_carrinho = id_carrinho;
     }
 
     public int getId_cliente() {
@@ -44,21 +47,6 @@ public class Pedido {
         this.id_cliente = id_cliente;
     }
 
-    public int getId_pagamento() {
-        return id_pagamento;
-    }
-
-    public void setId_pagamento(int id_pagamento) {
-        this.id_pagamento = id_pagamento;
-    }
-
-    public Timestamp getData_pedido() {
-        return data_pedido;
-    }
-
-    public void setData_pedido(Timestamp data_pedido) {
-        this.data_pedido = data_pedido;
-    }
 
     public double getValor_total() {
         return valor_total;
@@ -68,11 +56,11 @@ public class Pedido {
         this.valor_total = valor_total;
     }
 
-    public Status getStatus() {
+    public String getStatus() {
         return status;
     }
 
-    public void setStatus(Status status) {
+    public void setStatus(String status) {
         this.status = status;
     }
 
