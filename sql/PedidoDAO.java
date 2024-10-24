@@ -42,4 +42,38 @@ public class PedidoDAO {
 
     }
 
+    public int quantidadePedidos() 
+    {
+
+        int quantidade = 0;
+
+        String sql = "SELECT COUNT(*) AS total FROM pedido";
+
+        try {
+
+            PreparedStatement ps = Conexao.getConexao().prepareStatement(sql);
+
+            ResultSet rs = ps.executeQuery();
+
+            if(rs.next()) {
+            
+                quantidade = rs.getInt("total");
+
+            }
+
+            ps.close();
+            rs.close();
+
+        }
+
+        catch(SQLException e) 
+        {
+            System.out.println(e);
+        }
+
+        return quantidade;
+
+    }
+
+
 }

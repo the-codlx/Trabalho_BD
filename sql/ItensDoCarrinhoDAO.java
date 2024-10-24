@@ -92,49 +92,57 @@ public class ItensDoCarrinhoDAO {
 
         HashMap<Produto, Integer> produtos = new HashMap<>();
     
-        String itensDoCarrinho = "SELECT id_produto, COUNT(*) AS quantidade\n" +
-                "FROM ITENS_DO_CARRINHO\n" +
-                "WHERE id_carrinho = ?\n" +
-                "GROUP BY id_produto;";
+        String itensDoCarrinho = "SELECT id_produto, SUM(quantidade) AS quantidade_total\n" + //
+                        "FROM ITENS_DO_CARRINHO\n" + //
+                        "WHERE id_carrinho = ?\n" + //
+                        "GROUP BY id_produto;";
         String produtosSQL = "SELECT * FROM PRODUTO WHERE ID_PRODUTO = ?";
     
-        try (
-            // Preparar o statement para itens do carrinho
-            PreparedStatement stmtItensDoCarrinho = Conexao.getConexao().prepareStatement(itensDoCarrinho)
-        ) {
+        try (PreparedStatement stmtItensDoCarrinho = Conexao.getConexao().prepareStatement(itensDoCarrinho)) 
+        {
             stmtItensDoCarrinho.setInt(1, id_carrinho);
+            ResultSet rsItensDoCarrinho = stmtItensDoCarrinho.executeQuery();
     
-            try (
-                // Executar e obter o resultSet dos itens do carrinho
-                ResultSet rsItensDoCarrinho = stmtItensDoCarrinho.executeQuery()
-            ) {
-                while (rsItensDoCarrinho.next()) {
-                    int id_produto = rsItensDoCarrinho.getInt("id_produto");
-                    int quantidade = rsItensDoCarrinho.getInt("quantidade");
+            try{
+
+                if (rsItensDoCarrinho.next()) { // Primeira verificação
+                    
+                    do {
+
+                        int id_produto = rsItensDoCarrinho.getInt("id_produto");
+                        int quantidade = rsItensDoCarrinho.getInt("quantidade_total");
     
-                    try (
-                        // Preparar o statement para produtos
-                        PreparedStatement stmtProdutosSQL = Conexao.getConexao().prepareStatement(produtosSQL)
-                    ) {
-                        stmtProdutosSQL.setInt(1, id_produto);
+                        try (PreparedStatement stmtProdutosSQL = Conexao.getConexao().prepareStatement(produtosSQL)) {
+
+                            stmtProdutosSQL.setInt(1, id_produto);
+                            
+                            try (ResultSet rsProdutosSQL = stmtProdutosSQL.executeQuery()) {
+                                
+                                if (rsProdutosSQL.next()) 
+                                {
+
+                                    Produto produto = new Produto();
+                                    produto.setNome(rsProdutosSQL.getString("nome"));
+                                    produto.setDescricao(rsProdutosSQL.getString("descricao"));
+                                    produto.setPreco(rsProdutosSQL.getDouble("preco"));
+                                    produto.setId_produto(id_produto);
     
-                        try (
-                            // Executar e obter o resultSet dos produtos
-                            ResultSet rsProdutosSQL = stmtProdutosSQL.executeQuery()
-                        ) {
-                            if (rsProdutosSQL.next()) {
-                                Produto produto = new Produto();
-                                produto.setNome(rsProdutosSQL.getString("nome"));
-                                produto.setDescricao(rsProdutosSQL.getString("descricao"));
-                                produto.setPreco(rsProdutosSQL.getDouble("preco"));
-                                produto.setId_produto(id_produto);
-    
-                                produtos.put(produto, quantidade);
+                                    produtos.put(produto, quantidade);
+
+                                }
                             }
                         }
-                    }
+                        
+                    } while (rsItensDoCarrinho.next());
                 }
+
+                //rsItensDoCarrinho.close();
+                
             }
+            catch (SQLException e) {
+                System.out.println(e);
+            }
+
         } catch (SQLException e) {
             System.out.println(e);
         }
@@ -145,7 +153,23 @@ public class ItensDoCarrinhoDAO {
 
     public void removeItensDoCarrinho (int id_carrinho, int id_produto) {
 
-        String sql = "UPDATE ITENS_DO_CARRINHO SET QUANTIDADE = ? WHERE ID_PRODUTO = ?";
+        String sql = "DELETE FROM ITENS_DO_CARRINHO WHERE id_carrinho = ? AND id_produto = ?";
+
+        try {
+
+            PreparedStatement ps = Conexao.getConexao().prepareStatement(sql);
+
+            ps.setInt(1, id_carrinho);
+            ps.setInt(2, id_produto);
+
+            ps.executeUpdate();
+
+        }
+        catch(SQLException e) {
+
+            System.out.println(e);
+
+        }
 
     }
 

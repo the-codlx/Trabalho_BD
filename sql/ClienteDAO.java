@@ -2,6 +2,7 @@ package sql;
 
 import java.net.IDN;
 import java.sql.Connection;
+import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.Scanner;
@@ -183,4 +184,91 @@ public class ClienteDAO {
 
     }
 
+
+    public int quantidadeClientes() 
+    {
+
+        int quantidade = 0;
+
+        String sql = "SELECT COUNT(*) AS total FROM cliente";
+
+        try {
+
+            PreparedStatement ps = Conexao.getConexao().prepareStatement(sql);
+
+            ResultSet rs = ps.executeQuery();
+
+            if(rs.next()) {
+            
+                quantidade = rs.getInt("total");
+
+            }
+
+            ps.close();
+            rs.close();
+        }
+
+        catch(SQLException e) 
+        {
+            System.out.println(e);
+        }
+
+        return quantidade;
+
+    }
+
+    public int totalElementosTodasTabelas(){
+        
+        String[] tabelas = new String[6]; 
+
+        int totalRegistros = 0;
+
+        tabelas[0] = "carrinho_de_compras";
+        tabelas[1] = "cliente";
+        tabelas[2] = "itens_do_carrinho";
+        tabelas[3] = "pedido";
+        tabelas[4] = "produto";
+        tabelas[5] = "relatorio";
+
+        try {
+
+                // Para cada tabela, executa a query de contagem e soma os resultados
+                for (String tabela : tabelas) 
+                {
+
+                    String sql = "SELECT COUNT(*) AS total FROM " + tabela;
+
+                    try (PreparedStatement pstmt = Conexao.getConexao().prepareStatement(sql);
+                        ResultSet rs = pstmt.executeQuery()) {
+
+                        if (rs.next()) {
+
+                            int totalTabela = rs.getInt("total");
+                            totalRegistros += totalTabela;
+
+                        }
+
+                    }
+                    catch (SQLException e) {
+
+                        System.out.println(e);
+
+                    }
+
+                }
+
+                // Exibir o total de registros de todas as tabelas
+                
+
+            }
+            catch(Exception e) 
+            {
+                System.out.println(e);
+            }
+
+            return totalRegistros;
+            
+
+        }
+    
 }

@@ -11,6 +11,7 @@ import java.util.Scanner;
 import javax.naming.spi.DirStateFactory.Result;
 
 import Conection.Conexao;
+import Controller.CarrinhoController;
 import Controller.ClienteController;
 import Controller.ProdutoController;
 import model.CarrinhoDeCompras;
@@ -30,21 +31,26 @@ public class Principal {
     static Scanner entrada = new Scanner(System.in);
 
     public static void main(String[] args) {
+ 
 
         while (true) {
 
+            painelInicial();
+            System.out.println("SEJA BEM VINDO, APERTE ENTER PARA COMEÇAR.");
+            entrada.nextLine();
+
             // imprime as opçôes na tela
-            mostraOpcoes();
+            Utils.mostraOpcoes();
 
             // recebe a opção do usuário
-            switch (Opcao()) {
+            switch (Utils.Opcao()) {
 
                 case 1:
                     GerenciarLogin();
                     break;
 
                 case 2:
-                    cadastraCliente();
+                    ClienteController.cadastraCliente();
                     break;
                 case 3:
                     System.exit(0);
@@ -58,41 +64,55 @@ public class Principal {
 
     }
 
-    // métodos para mostrar as opcoes e capturar a opção do usuário
+    public static void painelInicial() {
 
-    private static String Opcoes() {
-        return "1 - Fazer Login\n2 - Realizar Cadastro\n3 - Sair";
+        ClienteDAO ClienteDAO = new ClienteDAO();
+        ProdutoDAO ProdutoDAO = new ProdutoDAO();
+        PedidoDAO PedidoDAO = new PedidoDAO();
+        
+        int clientes = ClienteDAO.quantidadeClientes();
+        int produtos = ProdutoDAO.quantidadeProdutos();
+        int pedidos = PedidoDAO.quantidadePedidos();
+        int itens = ClienteDAO.totalElementosTodasTabelas();
+
+        System.out.println("##################################################");
+        System.out.println("#              SISTEMA DE VENDAS                 #");
+        System.out.println("##################################################");
+        System.out.println("#                                                #");
+        System.out.println("#  TOTAL DE REGISTROS EXISTENTES                 #");
+        // Usando printf para formatar com largura fixa
+        System.out.printf("#  1 - CLIENTES: %-31d#\n", clientes);
+        System.out.printf("#  2 - PRODUTOS: %-34d#\n", produtos);
+        System.out.printf("#  3 - PEDIDOS: %-33d#\n", pedidos);
+        System.out.printf("#  4 - ITENS: %-33d#\n", itens);
+        System.out.println("#                                                #");
+        System.out.println("#                                                #");
+        System.out.println("##################################################");
+        System.out.println("#  CRIADO POR: Lucas Nunes                       #");
+        System.out.println("#             Romullo Leal                       #");
+        System.out.println("#             Lucas                              #");
+        System.out.println("#                                                #");
+        System.out.println("#  DISCIPLINA: BANCO DE DADOS                    #");
+        System.out.println("#             2024/2                             #");
+        System.out.println("#  PROFESSOR: HOWARD ROATTI                      #");
+        System.out.println("##################################################");
+        
     }
+    
 
-    private static int Opcao() {
-        int opcao = entrada.nextInt();
-        entrada.nextLine();
-        return opcao;
-    }
-
-    private static void mostraOpcoes() {
-        System.out.println(Opcoes());
-    }
-
-
-    // metodo para cadastrar cliente
-
-    private static void cadastraCliente() {
-        Cliente cliente = ClienteController.solicitarDadosCliente();
-        ClienteDAO clienteDAO = new ClienteDAO();
-        clienteDAO.cadastrarCliente(cliente);
-    }
-
-    // metodos para login
-
-
+    // menu Login
 
     public static void GerenciarLogin() {
 
+        // pede o usuario e a senha e joga em um map
         Map<String, String> credenciais = ClienteController.pedeUsuarioESenha();
 
-        int id_cliente = ClienteDAO.verificarCredenciaisERetornaID(credenciais.get("usuario"), credenciais.get("senha"));
+        // verifica se as credenciais estão no banco de dados e retorna o id do cliente
+        int id_cliente = ClienteDAO.verificarCredenciaisERetornaID(credenciais.get("usuario"),
+                credenciais.get("senha"));
 
+        // se o id não for -1 quer dizer que encontrou o cliente o cliente tem acesso ao
+        // menu
         if (id_cliente != -1) {
 
             MenuCliente(id_cliente);
@@ -101,11 +121,11 @@ public class Principal {
 
         else {
 
-            String opcoes = "1 - Tentar novamente\n2 - Cadastrar\n3 - Sair";
+            String opcoes = "1 - TENTAR NOVAMENTE\n2 - CADASTRAR\n3 - SAIR";
 
             System.out.println(opcoes);
 
-            int opcao = Integer.parseInt(entrada.nextLine());
+            int opcao = Utils.Opcao();
 
             switch (opcao) {
 
@@ -114,23 +134,19 @@ public class Principal {
                     break;
 
                 case 2:
-                    Cliente cliente = ClienteController.solicitarDadosCliente();
-                    ClienteDAO dao = new ClienteDAO();
-                    dao.cadastrarCliente(cliente);
+                    ClienteController.cadastraCliente();
                     GerenciarLogin();
-
                     break;
 
                 case 3:
-                    MenuCliente(id_cliente);
-                    break;
+                    System.exit(0);
 
             }
 
         }
     }
 
-    // metodo para Menu de Clientes
+    // Menu de Clientes
 
     private static void MenuCliente(int id_cliente) {
 
@@ -141,33 +157,36 @@ public class Principal {
 
         while (true) {
 
-            System.out.println("Escolha uma opção:");
-            System.out.println("1. Produtos");
-            System.out.println("2. Comprar Produto");
-            System.out.println("3. Visualizar Carrinho");
-            System.out.println("4. Excluir Produtos do Carrinho");
-            System.out.println("5. Finalizar Pagamento");
-            System.out.println("0. Sair");
+            System.out.println("ESCOLHA UMA OPÇÃO:");
+            System.out.println("1. PRODUTOS");
+            System.out.println("2. COMPRAR PRODUTO");
+            System.out.println("3. VISUALIZAR CARRINHO");
+            System.out.println("4. EXCLUIR PRODUTOS DO CARRINHO");
+            System.out.println("5. FINALIZAR PAGAMENTO");
+            System.out.println("0. SAIR");
 
-            int opcao = Opcao(); // Método para capturar a opção do usuário
+            int opcao = Utils.Opcao(); // Método para capturar a opção do usuário
 
             switch (opcao) {
                 case 1:
-                    Produtos(prod_dao);
+                    ProdutoController.Produtos(prod_dao);
+                    System.out.println();
                     break;
 
                 case 2:
-                    comprarProduto(id_carrinho_de_compras);                
+                    comprarProduto(id_carrinho_de_compras);
                     break;
 
                 case 3:
                     ProdutoController.listarProdutosNoCarrinho(itens_car_dao.produtosItensDoCarrinho(id_carrinho_de_compras));
+                    System.out.println();
                     break;
                 case 4:
-                    
-
+                    CarrinhoController.removeItemDoCarrinho(id_carrinho_de_compras, itens_car_dao);
+                    break;
                 case 5:
-                    Pedido pedido = new Pedido(id_cliente, id_carrinho_de_compras, itens_car_dao.retornaValorTotal(id_carrinho_de_compras));
+                    Pedido pedido = new Pedido(id_cliente, id_carrinho_de_compras,
+                            itens_car_dao.retornaValorTotal(id_carrinho_de_compras));
                     finalizarPagamento(pedido, itens_car_dao);
                     break;
                 case 0:
@@ -181,26 +200,18 @@ public class Principal {
         }
     }
 
-    // metodo para vizualizar produtos
-
-    private static void Produtos(ProdutoDAO dao) {
-        ProdutoController.listarProdutos(dao.listarProdutos());
-    }
-
-
-    //metodos para compra
-    public static void comprarProduto(int id_carrinho_de_compras) 
-    {   
+    // metodos para compra
+    public static void comprarProduto(int id_carrinho_de_compras) {
 
         ProdutoDAO dao = new ProdutoDAO();
 
         int id_produto = ProdutoController.produtoId();
 
-        //verifica se o produto está cadastrado
-        if(dao.existeProduto(id_produto)) {
-            
+        // verifica se o produto está cadastrado
+        if (dao.existeProduto(id_produto)) {
+
             int quantidade = ProdutoController.Quantidade();
-        
+
             // cria o carrinho
             ItensDoCarrinho ItensDoCarrinho = new ItensDoCarrinho(id_carrinho_de_compras, id_produto, quantidade);
 
@@ -208,67 +219,67 @@ public class Principal {
 
             itens_dao.adicionarProdutos(ItensDoCarrinho);
 
-            
-
         }
 
         else {
-            
-            System.out.println("Produto não cadastrado!");
-            System.out.println();
 
-            }                 
+            System.out.println("\nPRODUTO NÃO CADASTRADO!\n");
+            System.out.println("--------------------------------------\n");
 
         }
 
-        public static void finalizarPagamento(Pedido pedido, ItensDoCarrinhoDAO dao) {
+    }
 
-            HashMap produtosDoCarrinho = dao.produtosItensDoCarrinho(pedido.getId_carrinho());
+    public static void finalizarPagamento(Pedido pedido, ItensDoCarrinhoDAO dao) {
 
-            System.out.println("-----------------------------------------------------");
-            System.out.println();
-            System.out.println("Deseja realmente finalizar pagamento?");
-            System.out.println("1. Sim");
-            System.out.println("2. Não");
-            System.out.println();
-            ProdutoController.listarProdutosNoCarrinho(produtosDoCarrinho);
-            System.out.println();
+        HashMap produtosDoCarrinho = dao.produtosItensDoCarrinho(pedido.getId_carrinho());
 
-            int opcao = Opcao();
+        System.out.println();
+        System.out.println();
+        ProdutoController.listarProdutosNoCarrinho(produtosDoCarrinho);
+        System.out.println();
+        System.out.println("+" + "=====================================================" + "+");
+        System.out.println("+" + "              CONFIRMAÇÃO DE PAGAMENTO               " + "+");
+        System.out.println("+" + "=====================================================" + "+");
+        System.out.printf("DESEJA REALMENTE FINALIZAR O PAGAMENTO?%n");
+        System.out.printf("VALOR TOTAL: R$ %.2f%n", dao.retornaValorTotal(pedido.getId_carrinho()));
+        System.out.println();
+        System.out.println("1. SIM");
+        System.out.println("2. NÃO");
+        int opcao = Utils.Opcao();
 
-            switch(opcao) {
+        switch (opcao) {
 
-                case 1:
-                    try{
+            case 1:
+                try {
 
-                        PedidoDAO PedidoDAO = new PedidoDAO();
-                        PedidoDAO.criaPedido(pedido);
+                    PedidoDAO PedidoDAO = new PedidoDAO();
+                    PedidoDAO.criaPedido(pedido);
 
-                    }
-                    catch(Exception e) 
-                    {
+                } catch (Exception e) {
 
-                        System.out.println(e);
-                    
-                    }
-                    finally{
+                    System.out.println(e);
 
-                        System.out.println("------------------------------------");
-                        System.out.println();
-                        System.out.println("PARABÉNS PELA COMPRA! PEDIDO FINALIZADO.");
-                        System.out.println("RETORNANDO AO MENU.");
-                        System.out.println("------------------------------------");
-                        System.out.println();
+                } finally {
 
-                    }
+                    System.out.println();
+                    System.out.println("------------------------------------");
+                    System.out.println("PARABÉNS PELA COMPRA! PEDIDO FINALIZADO.");
+                    System.out.println("RETORNANDO AO MENU.");
+                    System.out.println("------------------------------------");
+                    System.out.println();
 
-                    break;
-                case 2:
-                    break;
+                }
 
-                default: break;
-            }
+                break;
+            case 2:
+                System.out.println();
+                break;
 
+            default:
+                break;
         }
+
+    }
 
 }

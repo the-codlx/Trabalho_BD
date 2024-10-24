@@ -4,46 +4,22 @@ import java.util.Scanner;
 
 public class Utils {
     
+    private static Scanner entrada = new Scanner(System.in);
+
     
-    public static int produtoId(Scanner scanner) {
+    public static String Opcoes() {
+        return "------------------------------------" + "\n1 - FAZER LOGIN\n2 - REALIZAR CADASTRO\n3 - SAIR" + "\n ------------------------------------";
+    }
 
-        int id = -1;  
-        boolean entradaValida = false;
-        
-        while (!entradaValida) 
+    public static int Opcao() {
+        int opcao = entrada.nextInt();
+        entrada.nextLine();
+        return opcao;
+    }
 
-        {
 
-            try {
-
-                System.out.println("Digite o id do produto:");
-                id = Integer.parseInt(scanner.nextLine());
-                
-                if (id > 0) 
-                {
-
-                    entradaValida = true;
-                    
-                } 
-
-                else 
-                {
-                    
-                    System.out.println("O id deve ser um número positivo. Tente novamente.");
-                
-                }
-            }
-            
-            catch (NumberFormatException e) {
-
-                System.out.println("Entrada inválida. Por favor, digite um número.");
-
-            }
-
-        }
-        
-        return id;
-
+    public static void mostraOpcoes() {
+        System.out.println(Utils.Opcoes());
     }
 
 }
