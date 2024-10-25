@@ -1,5 +1,4 @@
 package principal;
-
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -7,9 +6,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Scanner;
-
 import javax.naming.spi.DirStateFactory.Result;
-
 import Conection.Conexao;
 import Controller.CarrinhoController;
 import Controller.ClienteController;
@@ -24,6 +21,7 @@ import sql.ClienteDAO;
 import sql.ItensDoCarrinhoDAO;
 import sql.PedidoDAO;
 import sql.ProdutoDAO;
+import sql.RelatorioDAO;
 import utils.Utils;
 
 public class Principal {
@@ -154,15 +152,18 @@ public class Principal {
         CarrinhoDeComprasDAO car_dao = new CarrinhoDeComprasDAO();
         ItensDoCarrinhoDAO itens_car_dao = new ItensDoCarrinhoDAO();
         int id_carrinho_de_compras = car_dao.criarCarrinhoDeCompras(id_cliente);
+        RelatorioDAO relatorio = new RelatorioDAO();
 
         while (true) {
 
             System.out.println("ESCOLHA UMA OPÇÃO:");
             System.out.println("1. PRODUTOS");
-            System.out.println("2. COMPRAR PRODUTO");
-            System.out.println("3. VISUALIZAR CARRINHO");
-            System.out.println("4. EXCLUIR PRODUTOS DO CARRINHO");
-            System.out.println("5. FINALIZAR PAGAMENTO");
+            System.out.println("2. GERAR RELATORIO DOS PRODUTOS MAIS VENDIDOS");
+            System.out.println("3. COMPRAR PRODUTO");
+            System.out.println("4. VISUALIZAR CARRINHO");
+            System.out.println("5. EXCLUIR PRODUTOS DO CARRINHO");
+            System.out.println("6. FINALIZAR PAGAMENTO");
+            System.out.println("7. HISTORICO DE PEDIDOS");
             System.out.println("0. SAIR");
 
             int opcao = Utils.Opcao(); // Método para capturar a opção do usuário
@@ -174,20 +175,29 @@ public class Principal {
                     break;
 
                 case 2:
+                    relatorio.gerarRelatorioProdutosMaisVendidos();
+                    break;
+                    
+                case 3:
                     comprarProduto(id_carrinho_de_compras);
                     break;
 
-                case 3:
+                case 4:
                     ProdutoController.listarProdutosNoCarrinho(itens_car_dao.produtosItensDoCarrinho(id_carrinho_de_compras));
                     System.out.println();
                     break;
-                case 4:
+                case 5:
                     CarrinhoController.removeItemDoCarrinho(id_carrinho_de_compras, itens_car_dao);
                     break;
-                case 5:
+                case 6:
                     Pedido pedido = new Pedido(id_cliente, id_carrinho_de_compras,
                             itens_car_dao.retornaValorTotal(id_carrinho_de_compras));
                     finalizarPagamento(pedido, itens_car_dao);
+                    System.exit(0);
+                    break;
+
+                case 7:
+                    relatorio.exibirPedidosCliente(id_cliente);
                     break;
                 case 0:
                     return; // Sai do loop e volta ao menu anterior
@@ -265,7 +275,7 @@ public class Principal {
                     System.out.println();
                     System.out.println("------------------------------------");
                     System.out.println("PARABÉNS PELA COMPRA! PEDIDO FINALIZADO.");
-                    System.out.println("RETORNANDO AO MENU.");
+                    System.out.println("FECHANDO O PROGRAMA.");
                     System.out.println("------------------------------------");
                     System.out.println();
 

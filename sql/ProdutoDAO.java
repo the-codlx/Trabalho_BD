@@ -1,15 +1,16 @@
 package sql;
 import java.util.Scanner;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
 
 import Conection.Conexao;
 import model.CarrinhoDeCompras;
 import model.Cliente;
 import model.Produto;
+
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
 import java.util.ArrayList;
 
 public class ProdutoDAO {
@@ -88,6 +89,7 @@ public class ProdutoDAO {
             System.out.println(e);
 
         }
+        
 
     }
 

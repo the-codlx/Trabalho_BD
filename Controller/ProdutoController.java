@@ -1,5 +1,6 @@
 package Controller;
 import java.util.Scanner;
+
 import model.Produto;
 import sql.ProdutoDAO;
 

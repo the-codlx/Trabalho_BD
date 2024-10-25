@@ -1,5 +1,6 @@
 package sql;
 
+import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -151,28 +152,66 @@ public class ItensDoCarrinhoDAO {
     }
 
 
-    public void removeItensDoCarrinho (int id_carrinho, int id_produto) {
+    public void removeItensDoCarrinho(int id_carrinho, int id_produto) {
+    
+    // SQL para verificar a quantidade de itens no carrinho
+    String sqlSelect = "SELECT quantidade FROM ITENS_DO_CARRINHO WHERE id_carrinho = ? AND id_produto = ?";
+    
+    // SQL para remover os itens do carrinho
+    String sqlDelete = "DELETE FROM ITENS_DO_CARRINHO WHERE id_carrinho = ? AND id_produto = ?";
+    
+    // SQL para atualizar a quantidade de estoque
+    String sqlUpdateEstoque = "UPDATE PRODUTO SET quantidade_estoque = quantidade_estoque + ? WHERE id_produto = ?";
+    
+    try {
+        // Iniciar uma transação (opcional, mas recomendado)
+        Connection conexao = Conexao.getConexao();
+        conexao.setAutoCommit(false);  // Desativar o auto commit
 
-        String sql = "DELETE FROM ITENS_DO_CARRINHO WHERE id_carrinho = ? AND id_produto = ?";
-
-        try {
-
-            PreparedStatement ps = Conexao.getConexao().prepareStatement(sql);
-
-            ps.setInt(1, id_carrinho);
-            ps.setInt(2, id_produto);
-
-            ps.executeUpdate();
-
+        // Primeiro, verificar a quantidade de itens no carrinho
+        try (PreparedStatement psSelect = conexao.prepareStatement(sqlSelect)) {
+            psSelect.setInt(1, id_carrinho);
+            psSelect.setInt(2, id_produto);
+            
+            ResultSet rs = psSelect.executeQuery();
+            
+            if (rs.next()) {
+                int quantidadeNoCarrinho = rs.getInt("quantidade");
+                
+                // Atualizar o estoque com base na quantidade que estava no carrinho
+                try (PreparedStatement psUpdateEstoque = conexao.prepareStatement(sqlUpdateEstoque)) {
+                    psUpdateEstoque.setInt(1, quantidadeNoCarrinho);
+                    psUpdateEstoque.setInt(2, id_produto);
+                    
+                    psUpdateEstoque.executeUpdate();
+                }
+                
+                // Agora, remover os itens do carrinho
+                try (PreparedStatement psDelete = conexao.prepareStatement(sqlDelete)) {
+                    psDelete.setInt(1, id_carrinho);
+                    psDelete.setInt(2, id_produto);
+                    
+                    psDelete.executeUpdate();
+                }
+            } else {
+                System.out.println("Nenhum item encontrado no carrinho para este produto.");
+            }
+            
+            // Confirmar a transação
+            conexao.commit();
+        } catch (SQLException e) {
+            // Se der erro, desfazer a transação
+            conexao.rollback();
+            System.out.println("Erro ao remover itens do carrinho e atualizar o estoque: " + e.getMessage());
+        } finally {
+            // Voltar ao modo de auto commit
+            conexao.setAutoCommit(true);
         }
-        catch(SQLException e) {
-
-            System.out.println(e);
-
-        }
-
+        
+    } catch (SQLException e) {
+        System.out.println("Erro ao conectar ao banco de dados: " + e.getMessage());
     }
-
+    }
 
     public double retornaValorTotal (int id_carrinho) 
         {

@@ -6,10 +6,12 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.Scanner;
+
+import Conection.Conexao;
+import model.Cliente;
+
 import java.sql.Statement;
 import java.sql.ResultSet;
-import model.Cliente;
-import Conection.Conexao;
 
 public class ClienteDAO {
 

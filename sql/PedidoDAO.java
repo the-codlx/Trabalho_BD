@@ -31,6 +31,7 @@ public class PedidoDAO {
 
             dao.inativaCarrinho(pedido.getId_carrinho());
 
+            ps.close();
 
        }
        catch(SQLException e)
@@ -38,7 +39,8 @@ public class PedidoDAO {
 
         System.out.println(e);
         
-        }
+       }
+        
 
     }
 
