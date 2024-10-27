@@ -31,36 +31,12 @@ public class Principal {
     public static void main(String[] args) {
  
 
-        while (true) {
+        IniciaPrograma();
 
-            painelInicial();
-            System.out.println("SEJA BEM VINDO, APERTE ENTER PARA COMEÇAR.");
-            entrada.nextLine();
-
-            // imprime as opçôes na tela
-            Utils.mostraOpcoes();
-
-            // recebe a opção do usuário
-            switch (Utils.Opcao()) {
-
-                case 1:
-                    GerenciarLogin();
-                    break;
-
-                case 2:
-                    ClienteController.cadastraCliente();
-                    break;
-                case 3:
-                    System.exit(0);
-                    break;
-                default:
-                    System.out.println("Opção inválida.");
-                    break;
-            }
-
-        }
 
     }
+
+
 
     public static void painelInicial() {
 
@@ -95,6 +71,41 @@ public class Principal {
         System.out.println("#  PROFESSOR: HOWARD ROATTI                      #");
         System.out.println("##################################################");
         
+    }
+
+
+    public static void IniciaPrograma() 
+    {
+
+        while (true) {
+
+            painelInicial();
+            System.out.println("SEJA BEM VINDO, APERTE ENTER PARA COMEÇAR.");
+            entrada.nextLine();
+
+            // imprime as opçôes na tela
+            Utils.mostraOpcoes();
+
+            // recebe a opção do usuário
+            switch (Utils.Opcao()) {
+
+                case 1:
+                    GerenciarLogin();
+                    break;
+
+                case 2:
+                    ClienteController.cadastraCliente();
+                    break;
+                case 3:
+                    System.exit(0);
+                    break;
+                default:
+                    System.out.println("Opção inválida.");
+                    break;
+            }
+
+        }
+
     }
     
 
@@ -166,7 +177,7 @@ public class Principal {
             System.out.println("7. HISTORICO DE PEDIDOS");
             System.out.println("0. SAIR");
 
-            int opcao = Utils.Opcao(); // Método para capturar a opção do usuário
+            int opcao = Utils.Opcao(); 
 
             switch (opcao) {
                 case 1:
@@ -179,7 +190,7 @@ public class Principal {
                     break;
                     
                 case 3:
-                    comprarProduto(id_carrinho_de_compras);
+                    prod_dao.comprarProduto(id_carrinho_de_compras);
                     break;
 
                 case 4:
@@ -193,7 +204,7 @@ public class Principal {
                     Pedido pedido = new Pedido(id_cliente, id_carrinho_de_compras,
                             itens_car_dao.retornaValorTotal(id_carrinho_de_compras));
                     finalizarPagamento(pedido, itens_car_dao);
-                    System.exit(0);
+                    MenuCliente(id_cliente);
                     break;
 
                 case 7:
@@ -210,43 +221,15 @@ public class Principal {
         }
     }
 
-    // metodos para compra
-    public static void comprarProduto(int id_carrinho_de_compras) {
 
-        ProdutoDAO dao = new ProdutoDAO();
 
-        int id_produto = ProdutoController.produtoId();
-
-        // verifica se o produto está cadastrado
-        if (dao.existeProduto(id_produto)) {
-
-            int quantidade = ProdutoController.Quantidade();
-
-            // cria o carrinho
-            ItensDoCarrinho ItensDoCarrinho = new ItensDoCarrinho(id_carrinho_de_compras, id_produto, quantidade);
-
-            ItensDoCarrinhoDAO itens_dao = new ItensDoCarrinhoDAO();
-
-            itens_dao.adicionarProdutos(ItensDoCarrinho);
-
-        }
-
-        else {
-
-            System.out.println("\nPRODUTO NÃO CADASTRADO!\n");
-            System.out.println("--------------------------------------\n");
-
-        }
-
-    }
-
-    public static void finalizarPagamento(Pedido pedido, ItensDoCarrinhoDAO dao) {
+    public static void finalizarPagamento(Pedido pedido, ItensDoCarrinhoDAO dao) 
+    {
 
         HashMap produtosDoCarrinho = dao.produtosItensDoCarrinho(pedido.getId_carrinho());
 
-        System.out.println();
-        System.out.println();
         ProdutoController.listarProdutosNoCarrinho(produtosDoCarrinho);
+        System.out.println();
         System.out.println();
         System.out.println("+" + "=====================================================" + "+");
         System.out.println("+" + "              CONFIRMAÇÃO DE PAGAMENTO               " + "+");

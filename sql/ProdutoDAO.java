@@ -2,8 +2,10 @@ package sql;
 import java.util.Scanner;
 
 import Conection.Conexao;
+import Controller.ProdutoController;
 import model.CarrinhoDeCompras;
 import model.Cliente;
+import model.ItensDoCarrinho;
 import model.Produto;
 
 import java.sql.SQLException;
@@ -251,6 +253,37 @@ public class ProdutoDAO {
         }
 
         return quantidade;
+
+    }
+
+    
+
+    public void comprarProduto(int id_carrinho_de_compras) {
+
+        ProdutoDAO dao = new ProdutoDAO();
+
+        int id_produto = ProdutoController.produtoId();
+
+        // verifica se o produto está cadastrado
+        if (dao.existeProduto(id_produto)) {
+
+            int quantidade = ProdutoController.Quantidade();
+
+            // cria o carrinho
+            ItensDoCarrinho ItensDoCarrinho = new ItensDoCarrinho(id_carrinho_de_compras, id_produto, quantidade);
+
+            ItensDoCarrinhoDAO itens_dao = new ItensDoCarrinhoDAO();
+
+            itens_dao.adicionarProdutos(ItensDoCarrinho);
+
+        }
+
+        else {
+
+            System.out.println("\nPRODUTO NÃO CADASTRADO!\n");
+            System.out.println("--------------------------------------\n");
+
+        }
 
     }
 

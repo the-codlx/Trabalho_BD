@@ -1,9 +1,7 @@
 package Controller;
 import java.util.Scanner;
-
 import model.Produto;
 import sql.ProdutoDAO;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;

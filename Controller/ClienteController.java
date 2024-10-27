@@ -1,9 +1,7 @@
 package Controller;
-
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Scanner;
-
 import model.Cliente;
 import sql.ClienteDAO;
 
