@@ -9,9 +9,7 @@ import Conection.Conexao;
 
 public class RelatorioDAO {
 
-    public void gerarRelatorioProdutosMaisVendidos() 
-    {
-
+    public void gerarRelatorioProdutosMaisVendidos() {
         String consulta = """
             SELECT 
                 p.id_produto,
@@ -33,26 +31,27 @@ public class RelatorioDAO {
                 total_vendido DESC
             LIMIT 10;
         """;
-    
+
         String insertRelatorio = "INSERT INTO relatorio (data_geracao, conteudo) VALUES (CURRENT_TIMESTAMP, ?)";
-    
-        try (PreparedStatement stmtConsulta = Conexao.getConexao().prepareStatement(consulta);
+
+        try (Connection conexao = Conexao.getConexao();
+             PreparedStatement stmtConsulta = conexao.prepareStatement(consulta);
              ResultSet rs = stmtConsulta.executeQuery();
-             PreparedStatement stmtInsert = Conexao.getConexao().prepareStatement(insertRelatorio)) {
-    
+             PreparedStatement stmtInsert = conexao.prepareStatement(insertRelatorio)) {
+
             StringBuilder conteudo = new StringBuilder();
-    
+
             // Processa os resultados da consulta
             System.out.println("\nPRODUTOS MAIS VENDIDOS");
             System.out.println("----------------------");
-    
+
             while (rs.next()) {
                 String nomeProduto = rs.getString("nome");
                 int totalVendido = rs.getInt("total_vendido");
-    
+
                 // Adiciona ao conteúdo do relatório
                 conteudo.append(nomeProduto).append(": ").append(totalVendido).append(" VENDIDOS\n");
-    
+
                 // Mostra no console
                 System.out.println(nomeProduto + ": " + totalVendido + " VENDIDO");
             }
@@ -61,10 +60,10 @@ public class RelatorioDAO {
             if (conteudo.length() > 0) {
                 stmtInsert.setString(1, conteudo.toString().trim()); // Remove a última nova linha
                 stmtInsert.executeUpdate();
-                            } else {
+            } else {
                 System.out.println("NENHUM PRODUTO VENDIDO ENCONTRADO.");
             }
-    
+
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -113,5 +112,4 @@ public class RelatorioDAO {
             System.out.println("Erro ao consultar os pedidos: " + e.getMessage());
         }
     }
-    
 }

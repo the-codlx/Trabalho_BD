@@ -234,7 +234,7 @@ public class Principal {
     public static void finalizarPagamento(Pedido pedido, ItensDoCarrinhoDAO dao) 
     {
 
-        HashMap produtosDoCarrinho = dao.produtosItensDoCarrinho(pedido.getId_carrinho());
+        HashMap<Produto, Integer> produtosDoCarrinho = dao.produtosItensDoCarrinho(pedido.getId_carrinho());
 
         ProdutoController.listarProdutosNoCarrinho(produtosDoCarrinho);
         System.out.println();
