@@ -99,14 +99,13 @@ public class Principal {
                     ClienteController.cadastraCliente();
                     break;
                 case 3:
-                    System.exit(0);
+                    System.out.println("------------------------------------");
+                    System.out.println("CRIANDO AS COLEÇÕES NO BANCO DE DADOS...");
+                    utils.CreateCollenctionsAndData.InserirDadosTodasTabelas();
                     break;
 
                 case 4:
-                    System.out.println("------------------------------------");
-                    System.out.println("Diga o nome da coleção que deseja inserir no MongoDB: ");
-                    String collection = entrada.nextLine();
-                    utils.CreateCollenctionsAndData.InserirColecaoFromMySQL(collection);
+                    System.exit(0);
                     break;
                 default:
                     System.out.println("Opção inválida.");

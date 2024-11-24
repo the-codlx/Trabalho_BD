@@ -15,9 +15,6 @@ import java.sql.ResultSet;
 
 public class ClienteDAO {
 
-    private static ResultSet rs = null;
-    private static PreparedStatement ps = null;
-
 
     public void cadastrarCliente(Cliente cliente) {
 

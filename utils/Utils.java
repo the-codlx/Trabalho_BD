@@ -11,7 +11,7 @@ public class Utils {
 
     
     public static String Opcoes() {
-        return "------------------------------------" + "\n1 - FAZER LOGIN\n2 - REALIZAR CADASTRO\n3 - SAIR" + "\n ------------------------------------";
+        return "------------------------------------" + "\n1 - FAZER LOGIN\n2 - REALIZAR CADASTRO\n3 - CRIAR AS COLEÇÕES NO BANCO DE DADOS MONGODB\n4 - SAIR" + "\n ------------------------------------";
     }
 
     public static int Opcao() {

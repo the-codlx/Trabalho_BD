@@ -1,21 +1,22 @@
 package sql;
 import java.util.Scanner;
-
 import Conection.Conexao;
 import Controller.ProdutoController;
 import model.CarrinhoDeCompras;
 import model.Cliente;
 import model.ItensDoCarrinho;
 import model.Produto;
-
+import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.util.ArrayList;
+import Conection.Conexao;
 
 public class ProdutoDAO {
+
 
         private Produto produto;
 
@@ -41,9 +42,9 @@ public class ProdutoDAO {
 
             sql = "INSERT INTO PRODUTO (NOME, DESCRICAO, PRECO, QUANTIDADE_ESTOQUE, CATEGORIA) VALUES (?, ?, ?, ?, ?)";
             
-            try {
+            try (Connection conexao = Conexao.getConexao();
+            PreparedStatement ps = conexao.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)){
 
-                ps = Conexao.getConexao().prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
 
                 ps.setString(1, this.produto.getNome());
                 ps.setString(2, this.produto.getDescricao());
