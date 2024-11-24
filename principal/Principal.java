@@ -2,12 +2,14 @@ package principal;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Scanner;
 import javax.naming.spi.DirStateFactory.Result;
 import Conection.Conexao;
+import Conection.MongoDBConexao;
 import Controller.CarrinhoController;
 import Controller.ClienteController;
 import Controller.ProdutoController;
@@ -98,6 +100,13 @@ public class Principal {
                     break;
                 case 3:
                     System.exit(0);
+                    break;
+
+                case 4:
+                    System.out.println("------------------------------------");
+                    System.out.println("Diga o nome da coleção que deseja inserir no MongoDB: ");
+                    String collection = entrada.nextLine();
+                    utils.CreateCollenctionsAndData.InserirColecaoFromMySQL(collection);
                     break;
                 default:
                     System.out.println("Opção inválida.");
