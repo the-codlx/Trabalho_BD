@@ -1,14 +1,16 @@
 package model;
 import java.sql.Date;
 
+import org.bson.types.ObjectId;
+
 public class Relatorio {
     
     private int id_relatorio;
-    private int id_pedido;
+    private ObjectId id_pedido;
     private Date data_geracao;
     private String conteudo;
 
-    public Relatorio (int id_pedido, String conteudo) 
+    public Relatorio (ObjectId id_pedido, String conteudo) 
     {
 
         this.id_pedido = id_pedido;
@@ -24,11 +26,11 @@ public class Relatorio {
         this.id_relatorio = id_relatorio;
     }
 
-    public int getId_pedido() {
+    public ObjectId getId_pedido() {
         return id_pedido;
     }
 
-    public void setId_pedido(int id_pedido) {
+    public void setId_pedido(ObjectId id_pedido) {
         this.id_pedido = id_pedido;
     }
 

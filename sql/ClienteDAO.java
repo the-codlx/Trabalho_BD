@@ -4,121 +4,126 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.List;
+
+import com.mongodb.client.MongoCollection;
+import com.mongodb.client.MongoDatabase;
+import com.mongodb.client.model.Filters;
+import com.mongodb.client.model.Updates;
+
 import java.sql.ResultSet;
 
 import Conection.Conexao;
+import Conection.MongoDBConexao;
 import model.Cliente;
+import org.bson.Document;
+import org.bson.types.ObjectId;
 
 public class ClienteDAO {
 
     public void cadastrarCliente(Cliente cliente) {
-        String sql = "INSERT INTO CLIENTE (NOME, EMAIL, CPF, CEP, RUA, BAIRRO, CIDADE, NUMERO, COMPLEMENTO, TELEFONE, SENHA, NOME_USUARIO) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        try {
+            MongoDatabase database = MongoDBConexao.getDatabase();
+            MongoCollection<Document> clientesCollection = database.getCollection("cliente");
 
-        try (Connection conn = Conexao.getConexao();
-             PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            Document clienteDoc = new Document("NOME", cliente.getNome())
+                    .append("EMAIL", cliente.getEmail())
+                    .append("CPF", cliente.getCpf())
+                    .append("CEP", cliente.getCep())
+                    .append("RUA", cliente.getRua())
+                    .append("BAIRRO", cliente.getBairro())
+                    .append("CIDADE", cliente.getCidade())
+                    .append("NUMERO", cliente.getNumero())
+                    .append("COMPLEMENTO", cliente.getComplemento())
+                    .append("TELEFONE", cliente.getTelefone())
+                    .append("SENHA", cliente.getSenha())
+                    .append("NOME_USUARIO", cliente.getNome_Usuario());
 
-            ps.setString(1, cliente.getNome());
-            ps.setString(2, cliente.getEmail());
-            ps.setString(3, cliente.getCpf());
-            ps.setString(4, cliente.getCep());
-            ps.setString(5, cliente.getRua());
-            ps.setString(6, cliente.getBairro());
-            ps.setString(7, cliente.getCidade());
-            ps.setString(8, cliente.getNumero());
-            ps.setString(9, cliente.getComplemento());
-            ps.setString(10, cliente.getTelefone());
-            ps.setString(11, cliente.getSenha());
-            ps.setString(12, cliente.getNome_Usuario());
+            clientesCollection.insertOne(clienteDoc);
 
-            int affectedRows = ps.executeUpdate();
+            cliente.setId_cliente(clienteDoc.getObjectId("_id").hashCode());
 
-            if (affectedRows > 0) {
-                try (ResultSet generatedKeys = ps.getGeneratedKeys()) {
-                    if (generatedKeys.next()) {
-                        cliente.setId_cliente(generatedKeys.getInt(1));
-                    } else {
-                        throw new SQLException("Falha ao obter o ID do cliente.");
-                    }
-                }
-            }
-        } catch (SQLException e) {
-            if (e.getSQLState().equals("23000")) {
-                System.out.println("Nome de usuário já cadastrado.");
+        } catch (Exception e) {
+            if (e.getMessage().contains("E11000 duplicate key error")) {
+                System.out.println("Nome de usuário ou email já cadastrados.");
             } else {
-                System.out.println(e);
+                System.out.println("Erro ao cadastrar cliente: " + e.getMessage());
             }
         }
     }
 
-    public static Cliente buscarClientePeloId(int id) {
-        Cliente cliente = new Cliente();
-        String sql = "SELECT * FROM Cliente WHERE id_cliente = ?";
+    public static Cliente buscarClientePeloId(String id) {
+        Cliente cliente = null;
 
-        try (Connection conn = Conexao.getConexao();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        try {
+            MongoDatabase database = MongoDBConexao.getDatabase();
+            MongoCollection<Document> collection = database.getCollection("cliente");
 
-            ps.setInt(1, id);
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    cliente.setId_cliente(id);
-                    cliente.setNome(rs.getString("nome"));
-                    cliente.setEmail(rs.getString("email"));
-                    cliente.setCpf(rs.getString("cpf"));
-                    cliente.setCep(rs.getString("cep"));
-                    cliente.setRua(rs.getString("rua"));
-                    cliente.setBairro(rs.getString("bairro"));
-                    cliente.setCidade(rs.getString("cidade"));
-                    cliente.setNumero(rs.getString("numero"));
-                    cliente.setComplemento(rs.getString("complemento"));
-                    cliente.setTelefone(rs.getString("telefone"));
-                    cliente.setSenha(rs.getString("senha"));
-                    cliente.setNome_Usuario(rs.getString("nome_usuario"));
-                    cliente.setRole(rs.getString("ROLE"));
-                }
+            Document filter = new Document("_id", new ObjectId(id));
+
+            Document doc = collection.find(filter).first();
+
+            if (doc != null) {
+                cliente = new Cliente();
+                cliente.setId_cliente(new ObjectId(id).hashCode());
+                cliente.setNome(doc.getString("NOME"));
+                cliente.setEmail(doc.getString("EMAIL"));
+                cliente.setCpf(doc.getString("CPF"));
+                cliente.setCep(doc.getString("CEP"));
+                cliente.setRua(doc.getString("RUA"));
+                cliente.setBairro(doc.getString("BAIRRO"));
+                cliente.setCidade(doc.getString("CIDADE"));
+                cliente.setNumero(doc.getString("NUMERO"));
+                cliente.setComplemento(doc.getString("COMPLEMENTO"));
+                cliente.setTelefone(doc.getString("TELEFONE"));
+                cliente.setSenha(doc.getString("SENHA"));
+                cliente.setNome_Usuario(doc.getString("NOME_USUARIO"));
             }
-        } catch (SQLException e) {
-            System.out.println(e);
+
+        } catch (Exception e) {
+            e.printStackTrace();
         }
 
         return cliente;
-    }
-
-    public static int verificarCredenciaisERetornaID(String Nome_Usuario, String senha) {
-        int id = 0;
-        String sql = "SELECT * FROM Cliente WHERE nome_usuario= ? AND senha= ?";
-
-        try (Connection conn = Conexao.getConexao();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-
-            ps.setString(1, Nome_Usuario);
-            ps.setString(2, senha);
-
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    id = rs.getInt("id_cliente");
-                } else {
-                    id = -1;
-                }
-            }
-        } catch (Exception e) {
-            System.out.println("Erro ao verificar credenciais: " + e);
         }
 
-        return id;
-    }
+    public static ObjectId verificarCredenciaisERetornaID(String Nome_Usuario, String senha) {
+
+        Document cliente = null;
+        ObjectId clienteId = null;
+
+        try {   
+            MongoDatabase database = MongoDBConexao.getDatabase();
+            MongoCollection<Document> collection = database.getCollection("cliente");
+
+           
+            Document filter = new Document("NOME_USUARIO", Nome_Usuario);
+
+            
+            cliente = collection.find(filter).first();
+
+            if (cliente != null && cliente.getString("SENHA").equals(senha)) {
+                clienteId = cliente.getObjectId("_id");
+            } 
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return clienteId;
+        }
 
     public int quantidadeClientes() {
         int quantidade = 0;
-        String sql = "SELECT COUNT(*) AS total FROM cliente";
 
-        try (Connection conn = Conexao.getConexao();
-             PreparedStatement ps = conn.prepareStatement(sql);
-             ResultSet rs = ps.executeQuery()) {
+        try {
+            MongoDatabase database = MongoDBConexao.getDatabase();
+            MongoCollection<Document> collection = database.getCollection("cliente");
 
-            if (rs.next()) {
-                quantidade = rs.getInt("total");
-            }
-        } catch (SQLException e) {
+            quantidade = (int) collection.countDocuments();
+
+        } catch (Exception e) {
             System.out.println(e);
         }
 
@@ -129,24 +134,96 @@ public class ClienteDAO {
         String[] tabelas = {"carrinho_de_compras", "cliente", "itens_do_carrinho", "pedido", "produto", "relatorio"};
         int totalRegistros = 0;
 
-        try (Connection conn = Conexao.getConexao()) {
+        try {
+            MongoDatabase database = MongoDBConexao.getDatabase();
+
             for (String tabela : tabelas) {
-                String sql = "SELECT COUNT(*) AS total FROM " + tabela;
-
-                try (PreparedStatement pstmt = conn.prepareStatement(sql);
-                     ResultSet rs = pstmt.executeQuery()) {
-
-                    if (rs.next()) {
-                        totalRegistros += rs.getInt("total");
-                    }
-                } catch (SQLException e) {
-                    System.out.println(e);
-                }
+                MongoCollection<Document> collection = database.getCollection(tabela.toUpperCase());
+                totalRegistros += (int) collection.countDocuments();
             }
+
         } catch (Exception e) {
             System.out.println(e);
         }
 
         return totalRegistros;
     }
+
+
+    public static List<Cliente> listarClientes() {
+        List<Cliente> clientes = new ArrayList<>();
+
+        try {
+            // Conectando ao banco de dados
+            MongoDatabase database = MongoDBConexao.getDatabase();
+            MongoCollection<Document> collection = database.getCollection("cliente");
+
+            // Buscando todos os documentos na coleção "cliente"
+            for (Document doc : collection.find()) {
+                // Criando um novo objeto Cliente a partir do documento
+                Cliente cliente = new Cliente();
+                cliente.setNome(doc.getString("NOME"));
+                cliente.setEmail(doc.getString("EMAIL"));
+                cliente.setCpf(doc.getString("CPF"));
+                cliente.setCep(doc.getString("CEP"));
+                cliente.setRua(doc.getString("RUA"));
+                cliente.setBairro(doc.getString("BAIRRO"));
+                cliente.setCidade(doc.getString("CIDADE"));
+                cliente.setNumero(doc.getString("NUMERO"));
+                cliente.setComplemento(doc.getString("COMPLEMENTO"));
+                cliente.setTelefone(doc.getString("TELEFONE"));
+                cliente.setSenha(doc.getString("SENHA"));
+                cliente.setNome_Usuario(doc.getString("NOME_USUARIO"));
+
+                // Adicionando o cliente à lista
+                clientes.add(cliente);
+            }
+
+        } catch (Exception e) {
+            System.out.println("Erro ao listar clientes: " + e.getMessage());
+        }
+
+        // Retorna a lista de clientes
+        return clientes;
+    }
+
+
+    public void alterarCliente(String nomeUsuario, Cliente clienteNovo) {
+        MongoDatabase database = MongoDBConexao.getDatabase();
+        MongoCollection<Document> collection = database.getCollection("cliente");
+
+        try {
+            // Verificar se o cliente existe antes de tentar atualizar
+            Document clienteExistente = collection.find(Filters.eq("NOME_USUARIO", nomeUsuario)).first();
+
+            if (clienteExistente == null) {
+                throw new Exception("Cliente com o nome de usuário '" + nomeUsuario + "' não encontrado.");
+            }
+
+            // Se o cliente for encontrado, realizar a atualização
+            collection.updateOne(
+                Filters.eq("NOME_USUARIO", nomeUsuario),  // Filtro para encontrar o cliente pelo nome de usuário
+                Updates.combine(
+                    Updates.set("NOME", clienteNovo.getNome()),
+                    Updates.set("EMAIL", clienteNovo.getEmail()),
+                    Updates.set("CPF", clienteNovo.getCpf()),
+                    Updates.set("CEP", clienteNovo.getCep()),
+                    Updates.set("RUA", clienteNovo.getRua()),
+                    Updates.set("BAIRRO", clienteNovo.getBairro()),
+                    Updates.set("CIDADE", clienteNovo.getCidade()),
+                    Updates.set("NUMERO", clienteNovo.getNumero()),
+                    Updates.set("COMPLEMENTO", clienteNovo.getComplemento()),
+                    Updates.set("TELEFONE", clienteNovo.getTelefone()),
+                    Updates.set("SENHA", clienteNovo.getSenha())
+                )
+            );
+
+            System.out.println("Cliente atualizado com sucesso.");
+        } catch (Exception e) {
+            // Caso ocorra algum erro (ex: cliente não encontrado ou erro na conexão)
+            System.err.println("Erro ao atualizar o cliente: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
 }

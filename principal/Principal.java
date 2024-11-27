@@ -1,13 +1,18 @@
 package principal;
+
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 import javax.naming.spi.DirStateFactory.Result;
+
+import org.bson.types.ObjectId;
+
 import Conection.Conexao;
 import Conection.MongoDBConexao;
 import Controller.CarrinhoController;
@@ -31,21 +36,17 @@ public class Principal {
     static Scanner entrada = new Scanner(System.in);
 
     public static void main(String[] args) {
- 
 
         IniciaPrograma();
 
-
     }
-
-
 
     public static void painelInicial() {
 
         ClienteDAO ClienteDAO = new ClienteDAO();
         ProdutoDAO ProdutoDAO = new ProdutoDAO();
         PedidoDAO PedidoDAO = new PedidoDAO();
-        
+
         int clientes = ClienteDAO.quantidadeClientes();
         int produtos = ProdutoDAO.quantidadeProdutos();
         int pedidos = PedidoDAO.quantidadePedidos();
@@ -72,12 +73,10 @@ public class Principal {
         System.out.println("#             2024/2                             #");
         System.out.println("#  PROFESSOR: HOWARD ROATTI                      #");
         System.out.println("##################################################");
-        
+
     }
 
-
-    public static void IniciaPrograma() 
-    {
+    public static void IniciaPrograma() {
 
         while (true) {
 
@@ -115,7 +114,6 @@ public class Principal {
         }
 
     }
-    
 
     // menu Login
 
@@ -124,13 +122,16 @@ public class Principal {
         // pede o usuario e a senha e joga em um map
         Map<String, String> credenciais = ClienteController.pedeUsuarioESenha();
 
-        // verifica se as credenciais estão no banco de dados e retorna o id do cliente
-        int id_cliente = ClienteDAO.verificarCredenciaisERetornaID(credenciais.get("usuario"),
-                credenciais.get("senha"));
+        if (credenciais.get("NOME_USUARIO").equals("admin") && credenciais.get("SENHA").equals("1234")) {
+            MenuAdmin();
+            return;
+        }
 
-        // se o id não for -1 quer dizer que encontrou o cliente o cliente tem acesso ao
-        // menu
-        if (id_cliente != -1) {
+        // verifica se as credenciais estão no banco de dados e retorna o id do cliente
+        ObjectId id_cliente = ClienteDAO.verificarCredenciaisERetornaID(credenciais.get("NOME_USUARIO"),
+                credenciais.get("SENHA"));
+
+        if (id_cliente != null) {
 
             MenuCliente(id_cliente);
 
@@ -165,12 +166,12 @@ public class Principal {
 
     // Menu de Clientes
 
-    private static void MenuCliente(int id_cliente) {
+    private static void MenuCliente(ObjectId id_cliente) {
 
         ProdutoDAO prod_dao = new ProdutoDAO();
         CarrinhoDeComprasDAO car_dao = new CarrinhoDeComprasDAO();
         ItensDoCarrinhoDAO itens_car_dao = new ItensDoCarrinhoDAO();
-        int id_carrinho_de_compras = car_dao.criarCarrinhoDeCompras(id_cliente);
+        ObjectId id_carrinho_de_compras = car_dao.criarCarrinhoDeCompras(id_cliente);
         RelatorioDAO relatorio = new RelatorioDAO();
 
         while (true) {
@@ -182,10 +183,10 @@ public class Principal {
             System.out.println("4. VISUALIZAR CARRINHO");
             System.out.println("5. EXCLUIR PRODUTOS DO CARRINHO");
             System.out.println("6. FINALIZAR PAGAMENTO");
-            System.out.println("7. HISTORICO DE PEDIDOS");
+            System.out.println("7. RELATORIO DE PEDIDOS DO CLIENTE");
             System.out.println("0. SAIR");
 
-            int opcao = Utils.Opcao(); 
+            int opcao = Utils.Opcao();
 
             switch (opcao) {
                 case 1:
@@ -196,14 +197,14 @@ public class Principal {
                 case 2:
                     relatorio.gerarRelatorioProdutosMaisVendidos();
                     break;
-                    
+
                 case 3:
                     prod_dao.comprarProduto(id_carrinho_de_compras);
                     break;
 
                 case 4:
-                    ProdutoController.listarProdutosNoCarrinho(itens_car_dao.produtosItensDoCarrinho(id_carrinho_de_compras));
-                    System.out.println();
+                    ProdutoController
+                            .listarProdutosNoCarrinho(itens_car_dao.produtosItensDoCarrinho(id_carrinho_de_compras));
                     break;
                 case 5:
                     CarrinhoController.removeItemDoCarrinho(id_carrinho_de_compras, itens_car_dao);
@@ -229,12 +230,65 @@ public class Principal {
         }
     }
 
+    // Menu Admin
+
+    private static void MenuAdmin() {
+
+        ProdutoDAO dao = new ProdutoDAO();
+        ClienteDAO c_dao = new ClienteDAO();
+        String nomeProduto;
+
+        Scanner entrada = new Scanner(System.in);   
+
+        while (true) {
+            System.out.println("========= MENU ADMIN =========");
+            System.out.println("1. Cadastrar Produto");
+            System.out.println("2. Alterar Produto");
+            System.out.println("3. Listar Produtos");
+            System.out.println("4. Excluir Produto");
+            System.out.println("5. Listar Clientes");
+            System.out.println("6. Alterar Cliente");
+            System.out.println("7. Excluir Cliente");
+            System.out.println("8. Sair");
+            System.out.println("==============================");
+            System.out.println("Escolha uma opção: ");
+            //int opcao = Integer.parseInt(entrada.nextLine())
+
+            switch (Utils.Opcao()) {
+                case 1:
+                    dao.cadastrarProduto(ProdutoController.CadastrarProduto());
+                    break;
+                case 2:
+                    dao.alterarProduto(ProdutoController.retornaNomeProduto(), ProdutoController.alterarProduto());
+                    break;
+                case 3:
+                    ProdutoController.Produtos(dao);
+                    break;
+                case 4:
+                    dao.excluirProdutoPorNome(ProdutoController.retornaNomeProduto());
+                    break;
+                case 5:
+                    ClienteController.mostrarTodosClientes();
+                    break;
+                case 6:
+                    c_dao.alterarCliente(ClienteController.pedeUsuario(), ClienteController.solicitarDadosCliente());
+                    break;
+                case 7:
+                    //ClienteController.excluiCliente();
+                    break;
+                case 8:
+                    return;
+                default:
+                    System.out.println("Opção inválida. Tente novamente.");
+                    break;
+            }
+        }
+    }
 
 
-    public static void finalizarPagamento(Pedido pedido, ItensDoCarrinhoDAO dao) 
-    {
+    public static void finalizarPagamento(Pedido pedido, ItensDoCarrinhoDAO dao) {
 
-        HashMap<Produto, Integer> produtosDoCarrinho = dao.produtosItensDoCarrinho(pedido.getId_carrinho());
+        List<Produto> produtosDoCarrinho = dao.produtosItensDoCarrinho(pedido.getId_carrinho());
 
         ProdutoController.listarProdutosNoCarrinho(produtosDoCarrinho);
         System.out.println();
@@ -266,7 +320,6 @@ public class Principal {
                     System.out.println();
                     System.out.println("------------------------------------");
                     System.out.println("PARABÉNS PELA COMPRA! PEDIDO FINALIZADO.");
-                    System.out.println("FECHANDO O PROGRAMA.");
                     System.out.println("------------------------------------");
                     System.out.println();
 

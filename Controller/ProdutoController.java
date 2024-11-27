@@ -4,6 +4,7 @@ import model.Produto;
 import sql.ProdutoDAO;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class ProdutoController {
@@ -29,8 +30,6 @@ public class ProdutoController {
         Produto produto = new Produto(nome, descricao, preco, quantidade_estoque, categoria);
 
         System.out.println("------------------------------");
-
-        entrada.close();
 
         return produto;
 
@@ -65,22 +64,20 @@ public class ProdutoController {
 
         System.out.println("-----------------------------------------");
 
-        entrada.close();
-
         return produto;
 
     }
 
 
-    public static int produtoId() {
+    public static String nomeProduto() {
         
         System.out.println("\n--------------------------------------\n");
-        System.out.println("DIGITE O ID DO PRODUTO:");
-        int id = Integer.parseInt(entrada.nextLine());
+        System.out.println("DIGITE O NOME EXATO DO PRODUTO(EM MAIÚSCULO):");
+        String nomeProduto = entrada.nextLine();
 
         System.out.println("\n--------------------------------------");
         
-        return id;
+        return nomeProduto;
         
     }
 
@@ -100,7 +97,6 @@ public class ProdutoController {
         System.out.println("-----------------PRODUTOS-----------------");
 
         for (Produto produto : produtos) {
-            System.out.println("ID: " + produto.getId_produto());
             System.out.println("Nome: " + produto.getNome());
             System.out.println("Descrição: " + produto.getDescricao());
             System.out.println("Preço: " + produto.getPreco());
@@ -112,37 +108,35 @@ public class ProdutoController {
 
     }
 
-    public static void listarProdutosNoCarrinho(HashMap<Produto, Integer> produtos) {
+    public static void listarProdutosNoCarrinho(List<Produto> produtosCarrinho) {
 
-        if(produtos.size() >= 1) 
-        {
+    if (!produtosCarrinho.isEmpty()) {
+        System.out.println("-----------------PRODUTOS NO CARRINHO-----------------");
 
-            System.out.println("-----------------PRODUTOS NO CARRINHO-----------------");
+        for (Produto produtoCarrinho : produtosCarrinho) {
 
-            for (Map.Entry<Produto, Integer> entrada : produtos.entrySet()) {
-                
-                Produto produto = entrada.getKey();
+            Produto produto = produtoCarrinho;
 
-                System.out.println("ID: " + produto.getId_produto());
-                System.out.println("Nome: " + produto.getNome());
-                System.out.println("Descrição: " + produto.getDescricao());
-                System.out.println("Preço: " + produto.getPreco());
-                System.out.println("Quantidade: " + entrada.getValue());
+            System.out.println("Nome: " + produto.getNome());
+            System.out.println("Descrição: " + produto.getDescricao());
+            System.out.println("Preço: " + produto.getPreco());
+            System.out.println("Quantidade: " + produtoCarrinho.getQuatidade_estoque());
 
-                System.out.println("-----------------------------------------------------");
-            }
-        }
-        else 
-        {
-            System.out.println("-----------------------------------------------------");
-            System.out.println();
-            System.out.println("DESCULPA, NÃO HÁ PRODUTOS NO CARRINHO.");
-            System.out.println();
             System.out.println("-----------------------------------------------------");
         }
-
+    } else {
+        System.out.println("-----------------------------------------------------");
+        System.out.println();
+        System.out.println("DESCULPA, NÃO HÁ PRODUTOS NO CARRINHO.");
+        System.out.println();
+        System.out.println("-----------------------------------------------------");
     }
-
+}
+    public static String retornaNomeProduto() {
+        System.out.println("DIGITE O NOME DO PRODUTO (EXATAMENTE COMO APRESENTADO): ");
+        String nome = entrada.nextLine();
+        return nome;
+    }
 
     public static void Produtos(ProdutoDAO dao) {
         ProdutoController.listarProdutos(dao.listarProdutos());

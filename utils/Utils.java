@@ -7,7 +7,7 @@ import java.util.Scanner;
 
 public class Utils {
     
-    private static Scanner entrada = new Scanner(System.in);
+    public static Scanner entrada = new Scanner(System.in);
 
     
     public static String Opcoes() {

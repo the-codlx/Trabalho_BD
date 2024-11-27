@@ -3,147 +3,130 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.List;
+
+import com.mongodb.client.MongoDatabase;
+import com.mongodb.client.MongoCollection;
+import org.bson.Document;
+import org.bson.conversions.Bson;
+import org.bson.types.ObjectId;
+
+import com.mongodb.client.model.Accumulators;
+import com.mongodb.client.model.Aggregates;
+import com.mongodb.client.model.Filters;
 
 import Conection.Conexao;
 import model.CarrinhoDeCompras;
+import Conection.MongoDBConexao;
 
 public class CarrinhoDeComprasDAO {
-    
 
-    public int criarCarrinhoDeCompras(int id_cliente) 
-    { 
+    public ObjectId criarCarrinhoDeCompras(ObjectId idCliente) {
 
-        String sql = "INSERT INTO CARRINHO_DE_COMPRAS (id_cliente) VALUES(?)";
 
-        int id_carrinho_de_compras = verificaSeTemCarrinhoAtivo(id_cliente);
+        ObjectId idCarrinhoDeCompras = verificaSeTemCarrinhoAtivo(idCliente);
 
-        //verifica se o cliente já possui carirnho de compras ativo e retorna o id do carrinho caso tenha
-        if(id_carrinho_de_compras != -1) 
-            return id_carrinho_de_compras;
-
+        if (idCarrinhoDeCompras != null) 
+            return idCarrinhoDeCompras;
 
         try {
-        
-            PreparedStatement ps = Conexao.getConexao().prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
+            MongoDatabase database = MongoDBConexao.getDatabase();
+            MongoCollection<Document> carrinhosCollection = database.getCollection("carrinho_de_compras");
 
 
-            ps.setInt(1, id_cliente);
+            Document novoCarrinho = new Document("id_cliente", idCliente)
+                           .append("status", "ativo");
 
+            carrinhosCollection.insertOne(novoCarrinho);
 
-            ps.executeUpdate();
+            idCarrinhoDeCompras = novoCarrinho.getObjectId("_id");
 
-            ResultSet generatedKeys = ps.getGeneratedKeys();
             
-            if(generatedKeys.next()) {
-                
-                id_carrinho_de_compras = generatedKeys.getInt(1);
-            
-            }
-
-            ps.close();
-        
-        }
-        catch(Exception e) {
-
-            System.out.println(e);
-
+        } catch (Exception e) {
+            System.out.println("Erro ao criar carrinho de compras: " + e.getMessage());
+            e.printStackTrace();
+            return null;
         }
 
-        return id_carrinho_de_compras;
-
+        return idCarrinhoDeCompras;
     }
 
+    /*private int calcularProximoIdCarrinho(MongoCollection<Document> carrinhosCollection) {
+        Document maxIdDoc = carrinhosCollection.aggregate(List.of(
+            Aggregates.group(null, Accumulators.max("maxId", "$id_carrinho"))
+        )).first();
 
-    public int verificaSeTemCarrinhoAtivo(int id_cliente) {
-
-        int id_carrinho = -1;
-
-        String sql = "SELECT * FROM CARRINHO_DE_COMPRAS WHERE ID_CLIENTE = ? AND STATUS = 'ATIVO'";
-
-        try 
-        {
-
-            PreparedStatement ps = Conexao.getConexao().prepareStatement(sql);
-
-            ps.setInt(1, id_cliente);
-
-            ResultSet rs = ps.executeQuery();
-
-            if(rs.next()) 
-            {
-                id_carrinho = rs.getInt(1);
-            }
-
-
-        }
-        catch(SQLException e) {
-            
-            System.out.println(e);
-
+        if (maxIdDoc == null || maxIdDoc.getInteger("maxId") == null) {
+            return 1;
         }
 
-        return id_carrinho;
+        return maxIdDoc.getInteger("maxId") + 1;
+    }*/
 
-    }
-
-
-    public CarrinhoDeCompras adicionarCarrinhoDeCompras(CarrinhoDeCompras carrinho) { 
-
-
-        String sql = "INSERT INTO CARRINHO_DE_COMPRAS (id_cliente) VALUES(?)";
+    public ObjectId verificaSeTemCarrinhoAtivo(ObjectId idCliente) {
+        ObjectId idCarrinho = null;
 
         try {
-        
-            PreparedStatement ps = Conexao.getConexao().prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
+            
+            MongoDatabase database = MongoDBConexao.getDatabase();
+            MongoCollection<Document> carrinhosCollection = database.getCollection("carrinho_de_compras");
+ 
 
+            Bson filtro = Filters.and(
+                Filters.eq("id_cliente", idCliente),
+                Filters.eq("status", "ativo")
+            );
 
-            ps.setInt(1, carrinho.getId_cliente());
+            Document carrinhoAtivo = carrinhosCollection.find(filtro).first();
 
-            ps.executeUpdate();
-
-            ResultSet generatedKeys = ps.getGeneratedKeys();
-
-            carrinho.setId_carrinho(generatedKeys.getInt(1));
-
-            ps.close();
-            generatedKeys.close();
-        
+            if (carrinhoAtivo != null) {
+                idCarrinho = carrinhoAtivo.getObjectId("_id"); 
+            }
+        } catch (Exception e) {
+            System.out.println("Erro ao verificar carrinho ativo: " + e.getMessage());
+            e.printStackTrace();
         }
-        catch(Exception e) {
 
-            System.out.println(e);
+        return idCarrinho;
+    }
 
+    /*public CarrinhoDeCompras adicionarCarrinhoDeCompras(CarrinhoDeCompras carrinho) {
+        try {
+            MongoDatabase database = MongoDBConexao.getDatabase();
+            MongoCollection<Document> carrinhosCollection = database.getCollection("carrinho_de_compras");
+
+            int novoIdCarrinho = calcularProximoIdCarrinho(carrinhosCollection);
+
+            Document novoCarrinho = new Document("id_carrinho", novoIdCarrinho)
+                        .append("id_cliente", carrinho.getId_cliente())
+                        .append("status", "ATIVO");
+
+            carrinhosCollection.insertOne(novoCarrinho);
+
+            carrinho.setId_carrinho(novoIdCarrinho);
+
+        } catch (Exception e) {
+            System.out.println("Erro ao adicionar carrinho de compras: " + e.getMessage());
+            e.printStackTrace();
         }
 
         return carrinho;
+    }*/
 
-    }
- 
+    public void inativaCarrinho(ObjectId id_carrinho) {
 
-    public void inativaCarrinho(int id_carrinho) 
-    {
+        try {
+            MongoDatabase database = MongoDBConexao.getDatabase();
+            MongoCollection<Document> carrinhos = database.getCollection("carrinho_de_compras");
 
-        String sql = "UPDATE CARRINHO_DE_COMPRAS SET STATUS = 'FINALIZADO' WHERE ID_CARRINHO = ?";
+            Document filtro = new Document("_id", id_carrinho);
+            Document atualizacao = new Document("$set", new Document("status", "finalizado"));
 
-        try
-        {
+            carrinhos.updateOne(filtro, atualizacao);
 
-            PreparedStatement ps = Conexao.getConexao().prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
-
-            ps.setInt(1, id_carrinho);
-
-            ps.executeUpdate();
-
-            ps.close();
-
+        } catch (Exception e) {
+            System.out.println("Erro ao atualizar o carrinho: " + e.getMessage());
         }
-
-        catch(SQLException e) {
-
-            System.out.println(e);
-
-        }
-
     }
-
+    
 }

@@ -4,146 +4,153 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
+import utils.*;
 import Conection.Conexao;
+import Conection.MongoDBConexao;
 import model.CarrinhoDeCompras;
 import model.ItensDoCarrinho;
 import model.Produto;
+import com.mongodb.MongoClient;
+import com.mongodb.MongoException;
+import com.mongodb.client.AggregateIterable;
+import com.mongodb.client.MongoClients;
+import com.mongodb.client.MongoCollection;
+import com.mongodb.client.MongoDatabase;
+import org.bson.Document;
+import org.bson.types.Decimal128;
+import org.bson.types.ObjectId;
 
 public class ItensDoCarrinhoDAO {
 
     public void adicionarProdutos(ItensDoCarrinho itens_do_carrinho) {
-        int quantidadeNoEstoque = 0;
-        String quantidadeEstoque = "SELECT quantidade_estoque FROM PRODUTO WHERE ID_PRODUTO = ?";
-        String updateQuantidadeEstoque = "UPDATE Produto SET quantidade_estoque = ? WHERE ID_PRODUTO = ?";
-        String adicionaProdutos = "INSERT INTO ITENS_DO_CARRINHO (id_carrinho, id_produto, quantidade) VALUES(?, ?, ?)";
+        MongoDatabase database = MongoDBConexao.getDatabase();
+        MongoCollection<Document> produtosCollection = database.getCollection("produto");
+        MongoCollection<Document> itensDoCarrinhoCollection = database.getCollection("itens_do_carrinho");
 
-        try (Connection conexao = Conexao.getConexao();
-             PreparedStatement stmtQuantEstoque = conexao.prepareStatement(quantidadeEstoque)) {
-
-            stmtQuantEstoque.setInt(1, itens_do_carrinho.getId_produto());
-            ResultSet rsQuantEstoque = stmtQuantEstoque.executeQuery();
-
-            if (rsQuantEstoque.next()) {
-                quantidadeNoEstoque = rsQuantEstoque.getInt("quantidade_estoque");
-            }
+        Document produto = produtosCollection.find(new Document("_id", itens_do_carrinho.getId_produto())).first();
+        if (produto != null) {
+            int quantidadeNoEstoque = produto.getInteger("quantidade_estoque");
 
             if (quantidadeNoEstoque >= itens_do_carrinho.getQuantidade()) {
-                try (PreparedStatement stmtAdicionaProdutos = conexao.prepareStatement(adicionaProdutos)) {
-                    stmtAdicionaProdutos.setInt(1, itens_do_carrinho.getId_carrinho());
-                    stmtAdicionaProdutos.setInt(2, itens_do_carrinho.getId_produto());
-                    stmtAdicionaProdutos.setInt(3, itens_do_carrinho.getQuantidade());
+                Document novoItem = new Document("id_carrinho", itens_do_carrinho.getId_carrinho())
+                        .append("id_produto", itens_do_carrinho.getId_produto())
+                        .append("quantidade", itens_do_carrinho.getQuantidade());
+                itensDoCarrinhoCollection.insertOne(novoItem);
 
-                    int produtoAdicionado = stmtAdicionaProdutos.executeUpdate();
-
-                    if (produtoAdicionado == 1) {
-                        try (PreparedStatement stmtUpdateQuantidadeEstoque = conexao.prepareStatement(updateQuantidadeEstoque)) {
-                            stmtUpdateQuantidadeEstoque.setInt(1, quantidadeNoEstoque - itens_do_carrinho.getQuantidade());
-                            stmtUpdateQuantidadeEstoque.setInt(2, itens_do_carrinho.getId_produto());
-                            stmtUpdateQuantidadeEstoque.executeUpdate();
-                            System.out.println("Produto adicionado ao carrinho!");
-                        }
-                    }
-                }
+                produtosCollection.updateOne(new Document("_id", itens_do_carrinho.getId_produto()),
+                        new Document("$set", new Document("quantidade_estoque", quantidadeNoEstoque - itens_do_carrinho.getQuantidade())));
+                System.out.println("Produto adicionado ao carrinho!");
             } else {
-                throw new IllegalArgumentException("Quantidade do produto não disponível!");
-            }
-        } catch (Exception e) {
-            System.out.println(e);
-        }
-    }
-
-    public HashMap<Produto, Integer> produtosItensDoCarrinho(int id_carrinho) {
-        HashMap<Produto, Integer> produtos = new HashMap<>();
-        String itensDoCarrinho = "SELECT id_produto, SUM(quantidade) AS quantidade_total FROM ITENS_DO_CARRINHO WHERE id_carrinho = ? GROUP BY id_produto;";
-        String produtosSQL = "SELECT * FROM PRODUTO WHERE ID_PRODUTO = ?";
-
-        try (Connection conexao = Conexao.getConexao();
-             PreparedStatement stmtItensDoCarrinho = conexao.prepareStatement(itensDoCarrinho)) {
-
-            stmtItensDoCarrinho.setInt(1, id_carrinho);
-            ResultSet rsItensDoCarrinho = stmtItensDoCarrinho.executeQuery();
-
-            while (rsItensDoCarrinho.next()) {
-                int id_produto = rsItensDoCarrinho.getInt("id_produto");
-                int quantidade = rsItensDoCarrinho.getInt("quantidade_total");
-
-                try (PreparedStatement stmtProdutosSQL = conexao.prepareStatement(produtosSQL)) {
-                    stmtProdutosSQL.setInt(1, id_produto);
-                    ResultSet rsProdutosSQL = stmtProdutosSQL.executeQuery();
-
-                    if (rsProdutosSQL.next()) {
-                        Produto produto = new Produto();
-                        produto.setNome(rsProdutosSQL.getString("nome"));
-                        produto.setDescricao(rsProdutosSQL.getString("descricao"));
-                        produto.setPreco(rsProdutosSQL.getDouble("preco"));
-                        produto.setId_produto(id_produto);
-
-                        produtos.put(produto, quantidade);
+                            throw new IllegalArgumentException("Quantidade do produto não disponível!");
+                        }
+                    } else {
+                        throw new IllegalArgumentException("Produto não encontrado!");
                     }
                 }
-            }
-        } catch (SQLException e) {
-            System.out.println(e);
-        }
+            
 
-        return produtos;
-    }
-
-    public void removeItensDoCarrinho(int id_carrinho, int id_produto) {
-        String sqlSelect = "SELECT quantidade FROM ITENS_DO_CARRINHO WHERE id_carrinho = ? AND id_produto = ?";
-        String sqlDelete = "DELETE FROM ITENS_DO_CARRINHO WHERE id_carrinho = ? AND id_produto = ?";
-        String sqlUpdateEstoque = "UPDATE PRODUTO SET quantidade_estoque = quantidade_estoque + ? WHERE id_produto = ?";
-
-        try (Connection conexao = Conexao.getConexao()) {
-            conexao.setAutoCommit(false);
-
-            try (PreparedStatement psSelect = conexao.prepareStatement(sqlSelect)) {
-                psSelect.setInt(1, id_carrinho);
-                psSelect.setInt(2, id_produto);
-                ResultSet rs = psSelect.executeQuery();
-
-                if (rs.next()) {
-                    int quantidadeNoCarrinho = rs.getInt("quantidade");
-
-                    try (PreparedStatement psUpdateEstoque = conexao.prepareStatement(sqlUpdateEstoque)) {
-                        psUpdateEstoque.setInt(1, quantidadeNoCarrinho);
-                        psUpdateEstoque.setInt(2, id_produto);
-                        psUpdateEstoque.executeUpdate();
+                public List<Produto> produtosItensDoCarrinho(ObjectId idCarrinho) {
+                    List<Produto> itensCarrinho = new ArrayList<>();
+                
+                    try {
+                        // Obtenha a conexão com o banco de dados MongoDB
+                        MongoDatabase database = MongoDBConexao.getDatabase();
+                        
+                        // Defina a coleção de itens do carrinho
+                        MongoCollection<Document> itensCollection = database.getCollection("itens_do_carrinho");
+            
+                        // Realize a agregação
+                        AggregateIterable<Document> resultado = itensCollection.aggregate(Arrays.asList(
+                            // Filtra os itens para o carrinho específico
+                            new Document("$match", new Document("id_carrinho", idCarrinho)),
+                            
+                            // Agrupa por id_produto e soma as quantidades
+                            new Document("$group", new Document("_id", "$id_produto")
+                                    .append("quantidade_total", new Document("$sum", "$quantidade")))
+                        ));
+            
+                        // Itere sobre os resultados da agregação
+                        for (Document item : resultado) {
+                            // Obtenha o id_produto e a quantidade total
+                            ObjectId idProduto = item.getObjectId("_id");
+                            int quantidadeTotal = item.getInteger("quantidade_total");
+            
+                            // Agora, você pode buscar detalhes do produto (por exemplo, nome, preço)
+                            Document produtoDoc = database.getCollection("produto").find(new Document("_id", idProduto)).first();
+            
+                            if (produtoDoc != null) {
+                                Produto produto = new Produto();    
+                                produto.setNome(produtoDoc.getString("nome"));
+                                produto.setPreco(produtoDoc.get("preco", Decimal128.class).doubleValue());
+                                produto.setDescricao(produtoDoc.getString("descricao"));
+                                produto.setQuatidade_estoque(quantidadeTotal);
+                                itensCarrinho.add(produto);
+                            }
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
                     }
-
-                    try (PreparedStatement psDelete = conexao.prepareStatement(sqlDelete)) {
-                        psDelete.setInt(1, id_carrinho);
-                        psDelete.setInt(2, id_produto);
-                        psDelete.executeUpdate();
-                    }
-                } else {
-                    System.out.println("Nenhum item encontrado no carrinho para este produto.");
+            
+                    return itensCarrinho;
                 }
 
-                conexao.commit();
-            } catch (SQLException e) {
-                conexao.rollback();
-                System.out.println("Erro ao remover itens do carrinho e atualizar o estoque: " + e.getMessage());
-            } finally {
-                conexao.setAutoCommit(true);
-            }
-        } catch (SQLException e) {
-            System.out.println("Erro ao conectar ao banco de dados: " + e.getMessage());
-        }
-    }
+            
+                public void removeItensDoCarrinho(ObjectId id_carrinho, String nomeProduto) {
+                    // Conexão com o banco de dados
+                    MongoDatabase database = MongoDBConexao.getDatabase();
+                    MongoCollection<Document> itensDoCarrinhoCollection = database.getCollection("itens_do_carrinho");
+                    MongoCollection<Document> produtosCollection = database.getCollection("produto");
+                
+                    // Buscar o produto pelo nome para obter o id_produto
+                    Document produto = produtosCollection.find(new Document("nome", nomeProduto)).first();
+                
+                    if (produto != null) {
+                        ObjectId id_produto = produto.getObjectId("_id");
+                
+                        // Buscar o item do carrinho pelo id_carrinho e id_produto
+                        Document item = itensDoCarrinhoCollection.find(
+                            new Document("id_carrinho", id_carrinho).append("id_produto", id_produto)
+                        ).first();
+                
+                        if (item != null) {
+                            int quantidadeNoCarrinho = item.getInteger("quantidade");
+                
+                            // Remover o item do carrinho
+                            itensDoCarrinhoCollection.deleteOne(
+                                new Document("id_carrinho", id_carrinho).append("id_produto", id_produto)
+                            );
+                
+                            // Atualizar o estoque do produto
+                            produtosCollection.updateOne(
+                                new Document("_id", id_produto),
+                                new Document("$inc", new Document("quantidade_estoque", quantidadeNoCarrinho))
+                            );
+                
+                            System.out.println("Item removido do carrinho e estoque atualizado!");
+                        } else {
+                            System.out.println("Nenhum item encontrado no carrinho para este produto.");
+                        }
+                    } else {
+                        System.out.println("Produto com o nome '" + nomeProduto + "' não encontrado.");
+                    }
+                }
 
-    public double retornaValorTotal(int id_carrinho) {
+    public double retornaValorTotal(ObjectId id_carrinho) {
         double valor_total = 0;
-        HashMap<Produto, Integer> map = produtosItensDoCarrinho(id_carrinho);
+        List<Produto> produtos = produtosItensDoCarrinho(id_carrinho);
 
-        for (HashMap.Entry<Produto, Integer> entrada : map.entrySet()) {
-            Produto produto = entrada.getKey();
-            int quantidade = entrada.getValue();
+        for (Produto produto : produtos) {
+            int quantidade = produto.getQuatidade_estoque();
             valor_total += produto.getPreco() * quantidade;
         }
 
         return valor_total;
     }
 }
+

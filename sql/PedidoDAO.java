@@ -1,50 +1,43 @@
 package sql;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import com.mongodb.MongoClient;
+import com.mongodb.client.MongoCollection;
+import com.mongodb.client.MongoDatabase;
 
-import Conection.Conexao;
+import Conection.MongoDBConexao;
+
+import java.util.Date;
+
+import org.bson.Document;
 import model.Pedido;
+import utils.*;
 
 public class PedidoDAO {
 
+
     public void criaPedido(Pedido pedido) {
+        // Conexão com o banco de dados
+        MongoDatabase database = MongoDBConexao.getDatabase();
         CarrinhoDeComprasDAO dao = new CarrinhoDeComprasDAO();
-        String inserePedido = "INSERT INTO PEDIDO (id_cliente, valor_total, status, id_carrinho) VALUE(?, ?, ?, ?)";
-
-        try (Connection conn = Conexao.getConexao();
-             PreparedStatement ps = conn.prepareStatement(inserePedido)) {
-
-            ps.setInt(1, pedido.getId_cliente());
-            ps.setDouble(2, pedido.getValor_total());
-            ps.setString(3, "pago");
-            ps.setInt(4, pedido.getId_carrinho());
-
-            ps.executeUpdate();
-            dao.inativaCarrinho(pedido.getId_carrinho());
-
-        } catch (SQLException e) {
-            System.out.println(e);
-        }
+        MongoCollection<Document> collection = database.getCollection("pedido");
+    
+        // Criação do documento do pedido com a data atual
+        Document document = new Document("id_cliente", pedido.getId_cliente())
+                .append("valor_total", pedido.getValor_total())
+                .append("status", "pago")
+                .append("id_carrinho", pedido.getId_carrinho())
+                .append("data_pedido", new Date()); // Adiciona a data atual como o campo "data_pedido"
+    
+        // Inserção no banco de dados
+        collection.insertOne(document);
+    
+        // Inativa o carrinho associado ao pedido
+        dao.inativaCarrinho(pedido.getId_carrinho());
     }
 
     public int quantidadePedidos() {
-        int quantidade = 0;
-        String sql = "SELECT COUNT(*) AS total FROM pedido";
-
-        try (Connection conn = Conexao.getConexao();
-             PreparedStatement ps = conn.prepareStatement(sql);
-             ResultSet rs = ps.executeQuery()) {
-
-            if (rs.next()) {
-                quantidade = rs.getInt("total");
-            }
-
-        } catch (SQLException e) {
-            System.out.println(e);
-        }
-
-        return quantidade;
+        MongoDatabase database = MongoDBConexao.getDatabase();  
+        MongoCollection<Document> collection = database.getCollection("pedido");
+        long count = collection.countDocuments();
+        return (int) count;
     }
 }

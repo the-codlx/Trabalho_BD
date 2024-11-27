@@ -1,5 +1,6 @@
 package Controller;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 import model.Cliente;
@@ -105,12 +106,21 @@ public class ClienteController {
         System.out.println("--------------------------------------");
 
         Map<String, String> dadosLogin = new HashMap<>();
-        dadosLogin.put("usuario", nome_usuario);
-        dadosLogin.put("senha", senha);
+        dadosLogin.put("NOME_USUARIO", nome_usuario);
+        dadosLogin.put("SENHA", senha);
 
         return dadosLogin;
     }
 
+    public static String pedeUsuario() {
+
+        System.out.println("---------------------------------------");
+        System.out.println("DIGITE O NOME DE USUARIO DO CLIENTE(EXATAMENTE COMO EXIBIDO): ");
+        String nome_usuario = entrada.nextLine();
+        System.out.println("---------------------------------------");
+        System.out.println();
+        return nome_usuario;
+    }
 
     public static void cadastraCliente() {
             Cliente cliente = ClienteController.solicitarDadosCliente();
@@ -119,4 +129,21 @@ public class ClienteController {
         }
     
 
+    public static void mostrarTodosClientes() {
+        ClienteDAO clienteDAO = new ClienteDAO();
+        List<Cliente> clientes = clienteDAO.listarClientes();
+
+        if (clientes.isEmpty()) {
+            System.out.println("Nenhum cliente cadastrado.");
+        } else {
+            for (Cliente cliente : clientes) {
+                System.out.println("Nome: " + cliente.getNome());
+                System.out.println("CPF: " + cliente.getCpf());
+                System.out.println("Usuário: " + cliente.getNome_Usuario());
+                System.out.println("Senha: " + cliente.getSenha());
+                System.out.println("------------------------------------");
+            }
+        }
+    }
+        
 }

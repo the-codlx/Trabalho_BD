@@ -1,115 +1,126 @@
 package sql;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import com.mongodb.client.MongoCollection;
+import com.mongodb.client.MongoDatabase;
+import com.mongodb.client.model.Aggregates;
+import com.mongodb.client.model.Filters;
+import com.mongodb.client.model.Sorts;
+import com.mongodb.client.model.Accumulators;
+import com.mongodb.client.model.Projections;
+import org.bson.Document;
+import org.bson.conversions.Bson;
+import org.bson.types.Decimal128;
+import org.bson.types.ObjectId;
 
-import Conection.Conexao;
+import java.util.Arrays;
+import java.util.List;
+import java.sql.Date;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+
+import Conection.MongoDBConexao;
 
 public class RelatorioDAO {
 
     public void gerarRelatorioProdutosMaisVendidos() {
-        String consulta = """
-            SELECT 
-                p.id_produto,
-                p.nome,
-                SUM(ic.quantidade) AS total_vendido
-            FROM 
-                itens_do_carrinho ic
-            JOIN 
-                produto p ON ic.id_produto = p.id_produto
-            JOIN 
-                carrinho_de_compras cc ON ic.id_carrinho = cc.id_carrinho
-            JOIN 
-                pedido ped ON cc.id_carrinho = ped.id_carrinho
-            WHERE 
-                ped.status = 'pago'
-            GROUP BY 
-                p.id_produto, p.nome
-            ORDER BY 
-                total_vendido DESC
-            LIMIT 10;
-        """;
-
-        String insertRelatorio = "INSERT INTO relatorio (data_geracao, conteudo) VALUES (CURRENT_TIMESTAMP, ?)";
-
-        try (Connection conexao = Conexao.getConexao();
-             PreparedStatement stmtConsulta = conexao.prepareStatement(consulta);
-             ResultSet rs = stmtConsulta.executeQuery();
-             PreparedStatement stmtInsert = conexao.prepareStatement(insertRelatorio)) {
-
-            StringBuilder conteudo = new StringBuilder();
-
-            // Processa os resultados da consulta
-            System.out.println("\nPRODUTOS MAIS VENDIDOS");
-            System.out.println("----------------------");
-
-            while (rs.next()) {
-                String nomeProduto = rs.getString("nome");
-                int totalVendido = rs.getInt("total_vendido");
-
-                // Adiciona ao conteúdo do relatório
-                conteudo.append(nomeProduto).append(": ").append(totalVendido).append(" VENDIDOS\n");
-
-                // Mostra no console
-                System.out.println(nomeProduto + ": " + totalVendido + " VENDIDO");
+        // Conecta ao banco de dados
+        MongoDatabase database = MongoDBConexao.getDatabase();
+        MongoCollection<Document> itensDoCarrinhoCollection = database.getCollection("itens_do_carrinho");
+        MongoCollection<Document> relatorioCollection = database.getCollection("relatorio");
+        MongoCollection<Document> produtosCollection = database.getCollection("produto");
+    
+        // Criação do pipeline de agregação
+        List<Bson> pipeline = Arrays.asList(
+            // Agrupamento por id_produto e soma das quantidades
+            Aggregates.group("$id_produto", 
+                    Accumulators.sum("totalVendidos", "$quantidade")),
+            
+            // Ordenação em ordem decrescente por totalVendidos
+            Aggregates.sort(Sorts.descending("totalVendidos")),
+            
+            // Limitar aos 5 primeiros resultados
+            Aggregates.limit(5),
+            
+            // Lookup para juntar com a coleção de produtos para obter detalhes do produto
+            Aggregates.lookup("produtos", "_id", "_id", "produtoDetalhes"),
+            
+            // Projeção para incluir os campos desejados do produto (nome, descrição, preço, quantidade_estoque)
+            Aggregates.project(
+                Projections.fields(
+                    Projections.include("totalVendidos"),
+                    Projections.computed("nome", new Document("$arrayElemAt", Arrays.asList("$produtoDetalhes.nome", 0))),
+                    Projections.computed("descricao", new Document("$arrayElemAt", Arrays.asList("$produtoDetalhes.descricao", 0))),
+                    Projections.computed("preco", new Document("$arrayElemAt", Arrays.asList("$produtoDetalhes.preco", 0))),
+                    Projections.computed("quantidade_estoque", new Document("$arrayElemAt", Arrays.asList("$produtoDetalhes.quantidade_estoque", 0)))
+                )
+            )
+        );
+    
+        // Executa o pipeline no MongoDB
+        List<Document> resultado = itensDoCarrinhoCollection.aggregate(pipeline).into(new ArrayList<>());
+    
+        // Se houver resultados, insira-os na coleção "relatorio"
+        if (!resultado.isEmpty()) {
+            List<Document> relatorioDocs = new ArrayList<>();
+            for (Document doc : resultado) {
+                // Criando o documento para inserir no relatorio
+                Document relatorioDoc = new Document("id_produto", doc.getObjectId("_id"))
+                        .append("totalVendidos", doc.getInteger("totalVendidos"))
+                        .append("nome", doc.getString("nome"))
+                        .append("descricao", doc.getString("descricao"))
+                        .append("preco", doc.getDouble("preco"))
+                        .append("quantidade_estoque", doc.getInteger("quantidade_estoque"))
+                        .append("data_relatorio", new java.util.Date());  // Adiciona a data do relatório
+    
+                // Adicionando ao lista para inserção
+                relatorioDocs.add(relatorioDoc);
             }
-            System.out.println();
-            // Insere o conteúdo no relatório, se houver produtos vendidos
-            if (conteudo.length() > 0) {
-                stmtInsert.setString(1, conteudo.toString().trim()); // Remove a última nova linha
-                stmtInsert.executeUpdate();
-            } else {
-                System.out.println("NENHUM PRODUTO VENDIDO ENCONTRADO.");
-            }
-
-        } catch (SQLException e) {
-            e.printStackTrace();
+    
+            // Inserir os documentos na coleção "relatorio"
+            relatorioCollection.insertMany(relatorioDocs);
+    
+            System.out.println("Relatório dos 5 itens mais vendidos inserido com sucesso na coleção 'relatorio'.");
+        } else {
+            System.out.println("Não há itens suficientes para gerar o relatório.");
         }
     }
 
-    public void exibirPedidosCliente(int idCliente) {
-        String sql = "SELECT " +
-                     "p.id_pedido AS numero_pedido, " +
-                     "p.data_pedido AS data_pedido, " +
-                     "p.valor_total AS valor_total, " +
-                     "p.status AS status_pedido " +
-                     "FROM pedido p " +
-                     "WHERE p.id_cliente = ? " +  // ID do cliente passado como parâmetro
-                     "ORDER BY p.data_pedido DESC";
+    public List<Document> exibirPedidosCliente(ObjectId id_cliente) {
+        // Conexão com o banco de dados
+        MongoDatabase database = MongoDBConexao.getDatabase();
+        MongoCollection<Document> pedidoCollection = database.getCollection("pedido");
 
-        try (Connection conexao = Conexao.getConexao();
-             PreparedStatement ps = conexao.prepareStatement(sql)) {
+        // Lista para armazenar os pedidos pagos
+        List<Document> pedidosPagos = new ArrayList<>();
 
-            // Substituir o valor do ID do cliente na query
-            ps.setInt(1, idCliente);
+        // Consulta para buscar pedidos pagos do cliente
+        Document filtro = new Document("id_cliente", id_cliente).append("status", "pago");
 
-            // Executar a consulta
-            try (ResultSet rs = ps.executeQuery()) {
-                System.out.println("=================================================");
-                System.out.println("            RELATÓRIO DE PEDIDOS DO CLIENTE      ");
-                System.out.println("=================================================");
+        for (Document pedido : pedidoCollection.find(filtro)) {
+            pedidosPagos.add(pedido);
+        }
 
-                // Percorrer os resultados e exibir no console
-                while (rs.next()) {
-                    int numeroPedido = rs.getInt("numero_pedido");
-                    String dataPedido = rs.getString("data_pedido");
-                    double valorTotal = rs.getDouble("valor_total");
-                    String statusPedido = rs.getString("status_pedido");
+        // Exibir resultados ou retornar a lista
+        if (pedidosPagos.isEmpty()) {
+            System.out.println("Nenhum pedido pago encontrado para o cliente.");
+        } else {
+            System.out.println("-----------------PEDIDOS PAGOS-----------------");
+            for (Document pedido : pedidosPagos) {
+                System.out.println("Valor Total: " + pedido.getDouble("valor_total"));
+                System.out.println("Status: " + pedido.getString("status"));
 
-                    // Exibir cada pedido no formato desejado
-                    System.out.println("Número do Pedido: " + numeroPedido);
+                // Exibir a data do pedido
+                java.util.Date dataPedido = pedido.getDate("data_pedido");
+                if (dataPedido != null) {
                     System.out.println("Data do Pedido: " + dataPedido);
-                    System.out.println("Valor Total: R$ " + String.format("%.2f", valorTotal));
-                    System.out.println("Status do Pedido: " + statusPedido);
-                    System.out.println("-------------------------------------------------");
+                } else {
+                    System.out.println("Data do Pedido: Não registrada");
                 }
 
-                System.out.println("=================================================");
+                System.out.println("-----------------------------------------------");
             }
-        } catch (SQLException e) {
-            System.out.println("Erro ao consultar os pedidos: " + e.getMessage());
         }
-    }
+
+        return pedidosPagos;
+}
 }
