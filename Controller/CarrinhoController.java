@@ -3,7 +3,7 @@ import java.util.Scanner;
 
 import org.bson.types.ObjectId;
 
-import sql.ItensDoCarrinhoDAO;
+import mongodbquery.ItensDoCarrinhoDAO;
 import utils.Utils;
 
 public class CarrinhoController {

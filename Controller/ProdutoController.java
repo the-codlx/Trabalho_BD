@@ -1,7 +1,8 @@
 package Controller;
 import java.util.Scanner;
 import model.Produto;
-import sql.ProdutoDAO;
+import mongodbquery.ProdutoDAO;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -72,7 +73,7 @@ public class ProdutoController {
     public static String nomeProduto() {
         
         System.out.println("\n--------------------------------------\n");
-        System.out.println("DIGITE O NOME EXATO DO PRODUTO(EM MAIÚSCULO):");
+        System.out.println("DIGITE O NOME EXATO DO PRODUTO(DA FORMA QUE ESTÁ EXIBIDO):");
         String nomeProduto = entrada.nextLine();
 
         System.out.println("\n--------------------------------------");

@@ -1,4 +1,4 @@
-package sql;
+package mongodbquery;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -88,6 +88,28 @@ public class ClienteDAO {
         return cliente;
         }
 
+        public void excluirClientePeloNome(String nome) {
+            try {
+                // Obter a conexão com o banco de dados MongoDB
+                MongoDatabase database = MongoDBConexao.getDatabase();
+                MongoCollection<Document> collection = database.getCollection("cliente");
+        
+                // Verificar se o cliente existe
+                Document cliente = collection.find(Filters.eq("NOME", nome)).first();
+                if (cliente == null) {
+                    System.out.println("Cliente com o nome '" + nome + "' não encontrado.");
+                    return;
+                }
+        
+                // Remover o cliente pelo nome
+                collection.deleteOne(Filters.eq("NOME", nome));
+                System.out.println("Cliente com o nome '" + nome + "' foi excluído com sucesso.");
+            } catch (Exception e) {
+                System.err.println("Erro ao excluir cliente: " + e.getMessage());
+                e.printStackTrace();
+            }
+        }
+
     public static ObjectId verificarCredenciaisERetornaID(String Nome_Usuario, String senha) {
 
         Document cliente = null;
@@ -138,12 +160,17 @@ public class ClienteDAO {
             MongoDatabase database = MongoDBConexao.getDatabase();
 
             for (String tabela : tabelas) {
-                MongoCollection<Document> collection = database.getCollection(tabela.toUpperCase());
-                totalRegistros += (int) collection.countDocuments();
+                // Acessando a coleção
+                MongoCollection<Document> collection = database.getCollection(tabela);
+
+                // Contando os documentos e somando ao total de registros
+                int count = (int) collection.countDocuments();
+                totalRegistros += count;
+
             }
 
         } catch (Exception e) {
-            System.out.println(e);
+            System.out.println("Erro ao acessar as coleções: " + e);
         }
 
         return totalRegistros;

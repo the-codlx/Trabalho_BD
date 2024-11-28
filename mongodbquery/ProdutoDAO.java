@@ -1,4 +1,4 @@
-package sql;
+package mongodbquery;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.Filters;

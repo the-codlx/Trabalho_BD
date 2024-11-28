@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 import model.Cliente;
-import sql.ClienteDAO;
+import mongodbquery.ClienteDAO;
 
 public class ClienteController {
 
@@ -110,6 +110,18 @@ public class ClienteController {
         dadosLogin.put("SENHA", senha);
 
         return dadosLogin;
+    }
+
+    public static String nomeCliente() {
+        
+        System.out.println("\n--------------------------------------\n");
+        System.out.println("DIGITE O NOME EXATO DO CLIENTE(EXATAMENTE COMO EXIBIDO):");
+        String nomeCliente = entrada.nextLine();
+
+        System.out.println("\n--------------------------------------");
+        
+        return nomeCliente;
+        
     }
 
     public static String pedeUsuario() {

@@ -23,12 +23,13 @@ import model.Cliente;
 import model.ItensDoCarrinho;
 import model.Pedido;
 import model.Produto;
-import sql.CarrinhoDeComprasDAO;
-import sql.ClienteDAO;
-import sql.ItensDoCarrinhoDAO;
-import sql.PedidoDAO;
-import sql.ProdutoDAO;
-import sql.RelatorioDAO;
+import mongodbquery.CarrinhoDeComprasDAO;
+import mongodbquery.ClienteDAO;
+import mongodbquery.ItensDoCarrinhoDAO;
+import mongodbquery.PedidoDAO;
+import mongodbquery.ProdutoDAO;
+import mongodbquery.RelatorioDAO;
+import utils.CreateCollenctionsAndData;
 import utils.Utils;
 
 public class Principal {
@@ -100,7 +101,7 @@ public class Principal {
                 case 3:
                     System.out.println("------------------------------------");
                     System.out.println("CRIANDO AS COLEÇÕES NO BANCO DE DADOS...");
-                    utils.CreateCollenctionsAndData.InserirDadosTodasTabelas();
+                    utils.CreateCollenctionsAndData.ensureCollectionsExist();
                     break;
 
                 case 4:
@@ -238,7 +239,7 @@ public class Principal {
         ClienteDAO c_dao = new ClienteDAO();
         String nomeProduto;
 
-        Scanner entrada = new Scanner(System.in);   
+        Scanner entrada = new Scanner(System.in);
 
         while (true) {
             System.out.println("========= MENU ADMIN =========");
@@ -252,7 +253,7 @@ public class Principal {
             System.out.println("8. Sair");
             System.out.println("==============================");
             System.out.println("Escolha uma opção: ");
-            //int opcao = Integer.parseInt(entrada.nextLine())
+            // int opcao = Integer.parseInt(entrada.nextLine())
 
             switch (Utils.Opcao()) {
                 case 1:
@@ -274,7 +275,7 @@ public class Principal {
                     c_dao.alterarCliente(ClienteController.pedeUsuario(), ClienteController.solicitarDadosCliente());
                     break;
                 case 7:
-                    //ClienteController.excluiCliente();
+                    c_dao.excluirClientePeloNome(ClienteController.nomeCliente());
                     break;
                 case 8:
                     return;
@@ -284,7 +285,6 @@ public class Principal {
             }
         }
     }
-
 
     public static void finalizarPagamento(Pedido pedido, ItensDoCarrinhoDAO dao) {
 

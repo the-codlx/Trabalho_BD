@@ -1,4 +1,4 @@
-package sql;
+package mongodbquery;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;

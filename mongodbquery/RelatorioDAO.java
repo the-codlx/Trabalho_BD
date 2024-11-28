@@ -1,4 +1,4 @@
-package sql;
+package mongodbquery;
 
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
@@ -42,7 +42,7 @@ public class RelatorioDAO {
             Aggregates.limit(5),
             
             // Lookup para juntar com a coleção de produtos para obter detalhes do produto
-            Aggregates.lookup("produtos", "_id", "_id", "produtoDetalhes"),
+            Aggregates.lookup("produto", "_id", "_id", "produtoDetalhes"),
             
             // Projeção para incluir os campos desejados do produto (nome, descrição, preço, quantidade_estoque)
             Aggregates.project(
@@ -59,10 +59,19 @@ public class RelatorioDAO {
         // Executa o pipeline no MongoDB
         List<Document> resultado = itensDoCarrinhoCollection.aggregate(pipeline).into(new ArrayList<>());
     
-        // Se houver resultados, insira-os na coleção "relatorio"
+        // Se houver resultados, insira-os na coleção "relatorio" e mostre-os na tela
         if (!resultado.isEmpty()) {
             List<Document> relatorioDocs = new ArrayList<>();
             for (Document doc : resultado) {
+                // Exibindo o produto na tela
+                System.out.println("Produto: ");
+                System.out.println("Nome: " + doc.getString("nome"));
+                System.out.println("Descrição: " + doc.getString("descricao"));
+                Decimal128 precoDecimal = doc.get("preco", Decimal128.class);
+                System.out.println("Preço: " + precoDecimal.doubleValue());
+                System.out.println("Quantidade em Estoque: " + doc.getInteger("quantidade_estoque"));
+                System.out.println("------------------------------------");
+
                 // Criando o documento para inserir no relatorio
                 Document relatorioDoc = new Document("id_produto", doc.getObjectId("_id"))
                         .append("totalVendidos", doc.getInteger("totalVendidos"))
