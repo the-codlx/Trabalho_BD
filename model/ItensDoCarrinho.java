@@ -1,13 +1,15 @@
 package model;
 
+import org.bson.types.ObjectId;
+
 public class ItensDoCarrinho {
     
     private int id_itens_do_carrinho;
-    private int id_carrinho;
-    private int id_produto;
+    private ObjectId id_carrinho;
+    private ObjectId id_produto;
     private int quantidade;
 
-    public ItensDoCarrinho(int id_carrinho, int id_produto, int quantidade) 
+    public ItensDoCarrinho(ObjectId id_carrinho, ObjectId id_produto, int quantidade) 
     {
 
         this.id_carrinho = id_carrinho;
@@ -24,19 +26,19 @@ public class ItensDoCarrinho {
         this.id_itens_do_carrinho = id_itens_do_carrinho;
     }
 
-    public int getId_carrinho() {
+    public ObjectId getId_carrinho() {
         return id_carrinho;
     }
 
-    public void setId_carrinho(int id_carrinho) {
+    public void setId_carrinho(ObjectId id_carrinho) {
         this.id_carrinho = id_carrinho;
     }
 
-    public int getId_produto() {
+    public ObjectId getId_produto() {
         return id_produto;
     }
 
-    public void setId_produto(int id_produto) {
+    public void setId_produto(ObjectId id_produto) {
         this.id_produto = id_produto;
     }
 

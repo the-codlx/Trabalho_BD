@@ -2,17 +2,19 @@ package model;
 
 import java.sql.Timestamp;
 
+import org.bson.types.ObjectId;
+
 public class Pedido {
     
-    private int id_pedido;
-    private int id_cliente;
-    private int id_carrinho;
+    private ObjectId id_pedido;
+    private ObjectId id_cliente;
+    private ObjectId id_carrinho;
     private double valor_total;
     private String status;
 
 
 
-    public Pedido(int id_cliente, int id_carrinho_de_compras, double valor_total) {
+    public Pedido(ObjectId id_cliente, ObjectId id_carrinho_de_compras, double valor_total) {
 
         this.id_cliente = id_cliente;
         this.id_carrinho = id_carrinho_de_compras;
@@ -23,27 +25,27 @@ public class Pedido {
 
 
 
-    public int getId_pedido() {
+    public ObjectId getId_pedido() {
         return id_pedido;
     }
 
-    public void setId_pedido(int id_pedido) {
+    public void setId_pedido(ObjectId id_pedido) {
         this.id_pedido = id_pedido;
     }
 
-    public int getId_carrinho() {
+    public ObjectId getId_carrinho() {
         return id_carrinho;
     }
 
-    public void setId_carrinho(int id_carrinho) {
+    public void setId_carrinho(ObjectId id_carrinho) {
         this.id_carrinho = id_carrinho;
     }
 
-    public int getId_cliente() {
+    public ObjectId getId_cliente() {
         return id_cliente;
     }
 
-    public void setId_cliente(int id_cliente) {
+    public void setId_cliente(ObjectId id_cliente) {
         this.id_cliente = id_cliente;
     }
 
